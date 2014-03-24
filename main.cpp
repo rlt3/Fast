@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
     int right  = polygon[0].x;
     int bottom = polygon[0].y;
     int left   = polygon[0].x;
-    int i;
+    int i; 
 
     /* Find outer most points for all cardinal directions */
     for (i = 1; i < 4; i++) {
@@ -93,11 +93,52 @@ int main(int argc, char **argv) {
     SDL_Point bounds[2] = { {left, top}, {right, bottom} };
     SDL_RenderDrawPoints(render, bounds, 2);
 
-    printf("%d, %d, %d, %d\n", top, right, bottom, left);
-    printf("(%d, %d), (%d, %d)\n", left, top, right, bottom);
+    /* Set color to red */
+    SDL_SetRenderDrawColor(render, 255, 0, 0, 255);
+
+    float x, y, m, b;
+    for (i = 1; i < 4; i++) {
+      m = (polygon[i-1].x - polygon[i].x)/(polygon[i-1].y - polygon[i].y);
+      b = polygon[i].y - (m * polygon[i].x);
+
+      for (x = left; x < right; x++) {
+        y = (m*x) + b;
+        if (y > top && y < bottom) { /* top starts at 0 here */
+          SDL_RenderDrawPoint(render, x, y);
+        }
+      }
+    }
+
+    /*
+     * When filling the points, start when y of current position equals
+     * y in slope intercept form: y = mx - b
+     */
+
+    //SDL_Point origin = {300, 100};
+    //SDL_Point ending = {350, 150};
+
+    //float m = (ending.x - origin.x)/(ending.y - origin.y);
+    //float b = origin.y - (m * origin.x);
+
+    //for (x = left; x < right; x++) {
+    //  y = (m*x) + b;
+    //  if (y > top) { /* top starts at 0 here */
+    //    SDL_RenderDrawPoint(render, x, y);
+    //  }
+    //}
+
+    /* 
+     * Equation of line is always: y = mx+b. X & Y are the coordinate pairs.
+     * M is the slope. B is the y-intercept.
+     *
+     * m = (x2 - x1)/(y2 - y1)
+     * b = y - mx
+     */
 
     SDL_RenderPresent(render);
   }
+  //printf("y = %.2fx + %f\n", m, b);
+  //printf("(%d, %d), (%d, %d)\n", left, top, right, bottom);
 
   SDL_Quit();
   
