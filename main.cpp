@@ -58,8 +58,43 @@ int main(int argc, char **argv) {
     SDL_SetRenderDrawColor(render, 255, 255, 255, 255);
 
     /* Create an array of (x, y) coordinates and draw them */
-    SDL_Point points[4] = { {30, 30}, {60, 30}, {30, 60}, {60, 60} };
-    SDL_RenderDrawPoints(render, points, 4);
+    SDL_Point polygon[4] = { {300, 100}, {350, 150}, {300, 200}, {200, 150} };
+    SDL_RenderDrawPoints(render, polygon, 4);
+
+    int top    = polygon[0].y;
+    int right  = polygon[0].x;
+    int bottom = polygon[0].y;
+    int left   = polygon[0].x;
+    int i;
+
+    /* Find outer most points for all cardinal directions */
+    for (i = 1; i < 4; i++) {
+      if (polygon[i].x < left) {
+        left = polygon[i].x;
+      }
+
+      if (polygon[i].x > right) {
+        right = polygon[i].x;
+      }
+
+      if (polygon[i].y < top) {
+        top = polygon[i].y;
+      }
+
+      if (polygon[i].y > bottom) {
+        bottom = polygon[i].y;
+      }
+    }
+
+    /* Set color to blue */
+    SDL_SetRenderDrawColor(render, 0, 0, 255, 255);
+
+    /* Draw the bounding box */
+    SDL_Point bounds[2] = { {left, top}, {right, bottom} };
+    SDL_RenderDrawPoints(render, bounds, 2);
+
+    printf("%d, %d, %d, %d\n", top, right, bottom, left);
+    printf("(%d, %d), (%d, %d)\n", left, top, right, bottom);
 
     SDL_RenderPresent(render);
   }
