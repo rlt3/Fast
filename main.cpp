@@ -33,6 +33,8 @@ int main(int argc, char **argv) {
   /* Start time, add movement speed incrementally every N seconds */
   unsigned start_time = SDL_GetTicks();
 
+  int once = 0;
+
   while (game) {
 
     /* Handle events */
@@ -96,10 +98,37 @@ int main(int argc, char **argv) {
     /* Set color to red */
     SDL_SetRenderDrawColor(render, 255, 0, 0, 255);
 
-    float x, y, m, b;
-    for (i = 1; i < 4; i++) {
-      m = (polygon[i-1].x - polygon[i].x)/(polygon[i-1].y - polygon[i].y);
-      b = polygon[i].y - (m * polygon[i].x);
+    float x, y, m, b, my, mx;
+    int last;
+
+    /* 
+     * Equation of line is always: y = mx+b. X & Y are the coordinate pairs.
+     * M is the slope. B is the y-intercept.
+     *
+     * m = (x2 - x1)/(y2 - y1)
+     * b = y - mx
+     *
+     * When filling the points, start when y of current position equals
+     * y in slope intercept form: y = mx - b
+     */
+
+    for (i = 0; i < 4; i++) {
+      /* Make sure all points get connected, so connect first and last */
+      last = (i == 0 ? 3 : i-1);
+      
+      /* Do top and bottom of slope to keep the syntax more sane */
+      my = (float)(polygon[last].y - polygon[i].y);
+      mx = (float)(polygon[last].x - polygon[i].x);
+      m  = (float)(my/mx);
+      b  = polygon[i].y - (m * polygon[i].x);
+
+      if (once < 4) {
+        printf("%d. (%d, %d) -> (%d, %d) | y(%.2f)/x(%.2f) : %.2f\n", i,
+            polygon[i].x, polygon[i].y,
+            polygon[i-1].x, polygon[i-1].y,
+            my, mx, m);
+        once++;
+      }
 
       for (x = left; x < right; x++) {
         y = (m*x) + b;
@@ -109,36 +138,8 @@ int main(int argc, char **argv) {
       }
     }
 
-    /*
-     * When filling the points, start when y of current position equals
-     * y in slope intercept form: y = mx - b
-     */
-
-    //SDL_Point origin = {300, 100};
-    //SDL_Point ending = {350, 150};
-
-    //float m = (ending.x - origin.x)/(ending.y - origin.y);
-    //float b = origin.y - (m * origin.x);
-
-    //for (x = left; x < right; x++) {
-    //  y = (m*x) + b;
-    //  if (y > top) { /* top starts at 0 here */
-    //    SDL_RenderDrawPoint(render, x, y);
-    //  }
-    //}
-
-    /* 
-     * Equation of line is always: y = mx+b. X & Y are the coordinate pairs.
-     * M is the slope. B is the y-intercept.
-     *
-     * m = (x2 - x1)/(y2 - y1)
-     * b = y - mx
-     */
-
     SDL_RenderPresent(render);
   }
-  //printf("y = %.2fx + %f\n", m, b);
-  //printf("(%d, %d), (%d, %d)\n", left, top, right, bottom);
 
   SDL_Quit();
   
