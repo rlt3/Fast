@@ -7,6 +7,18 @@ void sdl_error(const char *type) {
   exit(1);
 }
 
+bool point_inside(SDL_Point z, SDL_Point a, SDL_Point b, SDL_Point c) {
+  float alpha = ((b.y - c.y)*(z.x - c.x) + (c.x - b.x)*(z.y - c.y))/
+                ((b.y - c.y)*(a.x - c.x) + (c.x - b.x)*(a.y - c.y));
+
+  float beta  = ((c.y - a.y)*(z.x - c.x) + (a.x - c.x)*(z.y - c.y))/
+                ((b.y - c.y)*(a.x - c.x) + (c.x - b.x)*(a.y - c.y));
+
+  float gamma = 1.0f - alpha - beta;
+
+  return (alpha > 0 && beta > 0 && gamma > 0);
+}
+
 int main(int argc, char **argv) {
 
   SDL_Window   *screen;
@@ -126,7 +138,7 @@ int main(int argc, char **argv) {
      * y in slope intercept form: y = mx - b
      */
 
-    for (i = 0; i < 1; i++) {
+    for (i = 0; i < 4; i++) {
       /* Make sure all points get connected, so connect first and last */
       last = (i == 0 ? 3 : i-1);
       
@@ -170,22 +182,26 @@ int main(int argc, char **argv) {
        * that X.
        */
 
-      int oy;
       /**
        * Instead of left, maybe leftmost point of the two coordinate pairs and
        * goes until rightmost pair?
        */
-      for (x = left; x < center_x; x++) { 
+      for (x = left; x < left; x++) { 
+        for (y = top; y > bottom; y++) {
+          SDL_Point z = {x, y};
+          SDL_Point center = {center_x, center_y};
+          if (point_inside(x, polygon[i], polygon[last], center));
+        }
+
         y  = (m*x) + b;
-        oy = -(m*x) + b;
 
         if (y > top && y < bottom) { /* top starts at 0 here */
           SDL_RenderDrawPoint(render, x, y);
         }
 
-        for (y; y < oy; y++) {
-          SDL_RenderDrawPoint(render, x, y);
-        }
+        //for (y; y < oy; y++) {
+        //  SDL_RenderDrawPoint(render, x, y);
+        //}
       }
     }
 
