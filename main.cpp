@@ -2,21 +2,23 @@
 
 #include <SDL2/SDL.h>
 
+bool point_inside(SDL_Point p, SDL_Point p1, SDL_Point p2, SDL_Point p3) {
+  float alpha = 
+    ((float)((p2.y - p3.y)*(p.x - p3.x) + (p3.x - p2.x)*(p.y - p3.y)) /
+            ((p2.y - p3.y)*(p1.x - p3.x) + (p3.x - p2.x)*(p1.y - p3.y)));
+
+  float beta  = 
+    ((float)((p3.y - p1.y)*(p.x - p3.x) + (p1.x - p3.x)*(p.y - p3.y)) /
+            ((p2.y - p3.y)*(p1.x - p3.x) + (p3.x - p2.x)*(p1.y - p3.y)));
+
+  float gamma = (float)(1.0f - alpha - beta);
+
+  return (alpha >= 0 && beta >= 0 && gamma >= 0);
+}
+
 void sdl_error(const char *type) {
   fprintf(stderr, "%s: %s\n", type, SDL_GetError());
   exit(1);
-}
-
-bool point_inside(SDL_Point z, SDL_Point a, SDL_Point b, SDL_Point c) {
-  float alpha = ((b.y - c.y)*(z.x - c.x) + (c.x - b.x)*(z.y - c.y))/
-                ((b.y - c.y)*(a.x - c.x) + (c.x - b.x)*(a.y - c.y));
-
-  float beta  = ((c.y - a.y)*(z.x - c.x) + (a.x - c.x)*(z.y - c.y))/
-                ((b.y - c.y)*(a.x - c.x) + (c.x - b.x)*(a.y - c.y));
-
-  float gamma = 1.0f - alpha - beta;
-
-  return (alpha > 0 && beta > 0 && gamma > 0);
 }
 
 int main(int argc, char **argv) {
@@ -44,8 +46,6 @@ int main(int argc, char **argv) {
 
   /* Start time, add movement speed incrementally every N seconds */
   unsigned start_time = SDL_GetTicks();
-
-  int once = 0;
 
   while (game) {
 
@@ -79,11 +79,9 @@ int main(int argc, char **argv) {
     int right  = polygon[0].x;
     int bottom = polygon[0].y;
     int left   = polygon[0].x;
-
-    float center_x;
-    float center_y;
-
     int i; 
+    
+    SDL_Point center = {polygon[0].x, polygon[3].y};
 
     /* Find outer most points for all cardinal directions */
     for (i = 1; i < 4; i++) {
@@ -105,14 +103,6 @@ int main(int argc, char **argv) {
     }
 
     /* Set color to blue */
-    SDL_SetRenderDrawColor(render, 255, 255, 255, 255);
-
-    center_x = polygon[0].x;
-    center_y = polygon[3].y;
-
-    SDL_RenderDrawPoint(render, center_x, center_y);
-
-    /* Set color to blue */
     SDL_SetRenderDrawColor(render, 0, 0, 255, 255);
 
     /* Draw the bounding box */
@@ -122,10 +112,8 @@ int main(int argc, char **argv) {
     /* Set color to red */
     SDL_SetRenderDrawColor(render, 255, 0, 0, 255);
 
-    float x,  y;            /* Graph coordinates & polygon coordinates */
-    float m,  b,  my,  mx;  /* Current  Slope intercept variables */
-    int   last;
-    int   next;
+    float x, y, m, b, my, mx;
+    int last;
 
     /* 
      * Equation of line is always: y = mx+b. X & Y are the coordinate pairs.
@@ -143,65 +131,26 @@ int main(int argc, char **argv) {
       last = (i == 0 ? 3 : i-1);
       
       /* Do top and bottom of slope to keep the syntax more sane */
-      my = (polygon[last].y - polygon[i].y);
-      mx = (polygon[last].x - polygon[i].x);
+      my = (float)(polygon[last].y - polygon[i].y);
+      mx = (float)(polygon[last].x - polygon[i].x);
       m  = (float)(my/mx);
       b  = polygon[i].y - (m * polygon[i].x);
 
-      if (once < 4) {
-        printf("%d. Now [(%d, %d); (%d, %d)] b: %.2f, m: %.2f\n", i,
-            polygon[last].x, polygon[last].y,
-            polygon[i].x, polygon[i].y,
-            b, m);
-        printf("center: (%f, %f)\n", center_x, center_y);
-        once++;
-      }
-
-      /**
-       * We are filling our shape by splitting it into triangles. First we draw
-       * the line from points a -> b, where a and b are just i and i-1. Then for
-       * every point at x, get the y value using the slope-intercept form. Draw
-       * the point if it doesn't exceed the bounds of our shape.
-       *
-       * Then, to fill our triangle, we need to know the center point of the
-       * shape. The center point is the common coordinate comprised of x, y
-       * values of each pair. All of our triangles are right triangles.
-       *
-       * So, for (A.x, A.y) and (B.x, B.y) the third coordinate might be
-       * (A.x, B.y) if it falls inside the bounds of the shape. If all the pairs
-       * of coordinates share this common point, it is deemed the center of the
-       * shape.
-       *
-       * For each x point (going across) we find the corresponding y for that
-       * line. We then start at y and move downwards until we hit the limit for
-       * that specific triangle. Repeat this for x across until we have filled 
-       * in our triangle.
-       *
-       * Another, I think, more simpler way is to just get the opposite slope
-       * value and start filling in until y has reached the opposite slope for
-       * that X.
+      /* 
+       * For each point x and y, parse the current triangle (2 points plus the
+       * center) and see if point lies inside triangle. If it does, draw it.
+       * 
+       * This could probably be improved by just doing the whole thing all at
+       * once rather than in sub triangles.
        */
-
-      /**
-       * Instead of left, maybe leftmost point of the two coordinate pairs and
-       * goes until rightmost pair?
-       */
-      for (x = left; x < left; x++) { 
-        for (y = top; y > bottom; y++) {
+      for (x = left; x < right; x++) {
+        for (y = top; y < bottom; y++) {
           SDL_Point z = {x, y};
-          SDL_Point center = {center_x, center_y};
-          if (point_inside(x, polygon[i], polygon[last], center));
+          if (point_inside(z, polygon[i], polygon[last], center)) {
+            SDL_SetRenderDrawColor(render, 0, 255, 0, 255);
+            SDL_RenderDrawPoint(render, x, y);
+          }
         }
-
-        y  = (m*x) + b;
-
-        if (y > top && y < bottom) { /* top starts at 0 here */
-          SDL_RenderDrawPoint(render, x, y);
-        }
-
-        //for (y; y < oy; y++) {
-        //  SDL_RenderDrawPoint(render, x, y);
-        //}
       }
     }
 
