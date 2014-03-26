@@ -171,7 +171,11 @@ int main(int argc, char **argv) {
        */
 
       int oy;
-      for (x = left; x < center_x; x++) {
+      /**
+       * Instead of left, maybe leftmost point of the two coordinate pairs and
+       * goes until rightmost pair?
+       */
+      for (x = left; x < center_x; x++) { 
         y  = (m*x) + b;
         oy = -(m*x) + b;
 
