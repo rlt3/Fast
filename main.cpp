@@ -16,6 +16,56 @@ bool point_inside(SDL_Point p, SDL_Point p1, SDL_Point p2, SDL_Point p3) {
   return (alpha >= 0 && beta >= 0 && gamma >= 0);
 }
 
+#define RIGHT  1
+#define LEFT  -1
+#define NONE   0
+
+SDL_Point v_sub(SDL_Point a, SDL_Point b) {
+  return (SDL_Point){(a.x - b.x), (a.y - b.y)};
+}
+
+int x_product(SDL_Point a, SDL_Point b) {
+  return ((a.x * b.y) - (a.y * b.x));
+}
+
+int get_side(SDL_Point a, SDL_Point b) {
+  int x = x_product(a, b);
+
+  if (x < 0) {
+    return LEFT;
+  } else if (x > 0) {
+    return RIGHT;
+  }
+
+  return NONE;
+}
+
+bool inside_convex_polygon(SDL_Point point, SDL_Point vertices[], int length) {
+  int       previous_side = NONE;
+  int       current_side;
+  SDL_Point a, b, affine_segment, affine_point;
+  
+  int n;
+  for (n = 0; n < length; n++) {
+    a = vertices[n];
+    b = vertices[(n + 1) % length];
+
+    affine_segment = v_sub(b, a);
+    affine_point   = v_sub(point, b);
+    current_side   = get_side(affine_segment, affine_point);
+
+    if (current_side == NONE) {
+      return false; /* outside or over an edge */
+    } else if (previous_side == NONE) { /* First Segment */
+      previous_side = current_side;
+    } else if (previous_side != current_side) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 void sdl_error(const char *type) {
   fprintf(stderr, "%s: %s\n", type, SDL_GetError());
   exit(1);
@@ -79,10 +129,8 @@ int main(int argc, char **argv) {
     int right  = polygon[0].x;
     int bottom = polygon[0].y;
     int left   = polygon[0].x;
-    int i; 
+    int i, x, y;
     
-    SDL_Point center = {polygon[0].x, polygon[3].y};
-
     /* Find outer most points for all cardinal directions */
     for (i = 1; i < 4; i++) {
       if (polygon[i].x < left) {
@@ -102,54 +150,12 @@ int main(int argc, char **argv) {
       }
     }
 
-    /* Set color to blue */
-    SDL_SetRenderDrawColor(render, 0, 0, 255, 255);
-
-    /* Draw the bounding box */
-    SDL_Point bounds[2] = { {left, top}, {right, bottom} };
-    SDL_RenderDrawPoints(render, bounds, 2);
-
-    /* Set color to red */
-    SDL_SetRenderDrawColor(render, 255, 0, 0, 255);
-
-    float x, y, m, b, my, mx;
-    int last;
-
-    /* 
-     * Equation of line is always: y = mx+b. X & Y are the coordinate pairs.
-     * M is the slope. B is the y-intercept.
-     *
-     * m = (x2 - x1)/(y2 - y1)
-     * b = y - mx
-     *
-     * When filling the points, start when y of current position equals
-     * y in slope intercept form: y = mx - b
-     */
-
-    for (i = 0; i < 4; i++) {
-      /* Make sure all points get connected, so connect first and last */
-      last = (i == 0 ? 3 : i-1);
-      
-      /* Do top and bottom of slope to keep the syntax more sane */
-      my = (float)(polygon[last].y - polygon[i].y);
-      mx = (float)(polygon[last].x - polygon[i].x);
-      m  = (float)(my/mx);
-      b  = polygon[i].y - (m * polygon[i].x);
-
-      /* 
-       * For each point x and y, parse the current triangle (2 points plus the
-       * center) and see if point lies inside triangle. If it does, draw it.
-       * 
-       * This could probably be improved by just doing the whole thing all at
-       * once rather than in sub triangles.
-       */
-      for (x = left; x < right; x++) {
-        for (y = top; y < bottom; y++) {
-          SDL_Point z = {x, y};
-          if (point_inside(z, polygon[i], polygon[last], center)) {
-            SDL_SetRenderDrawColor(render, 0, 255, 0, 255);
-            SDL_RenderDrawPoint(render, x, y);
-          }
+    for (x = left; x < right; x++) {
+      for (y = top; y < bottom; y++) {
+        SDL_Point z = {x, y};
+        if (inside_convex_polygon(z, polygon, 4)) {
+          SDL_SetRenderDrawColor(render, 0, 255, 0, 255);
+          SDL_RenderDrawPoint(render, x, y);
         }
       }
     }
@@ -160,86 +166,4 @@ int main(int argc, char **argv) {
   SDL_Quit();
   
   return 0;
-}
-
-//def inside_convex_polygon(point, vertices):
-//    previous_side = None
-//    n_vertices = len(vertices)
-//    for n in xrange(n_vertices):
-//        a, b = vertices[n], vertices[(n+1)%n_vertices]
-//        affine_segment = v_sub(b, a)
-//        affine_point = v_sub(point, a)
-//        current_side = get_side(affine_segment, affine_point)
-//        if current_side is None:
-//            return False #outside or over an edge
-//        elif previous_side is None: #first segment
-//            previous_side = current_side
-//        elif previous_side != current_side:
-//            return False
-//    return True
-//
-//def get_side(a, b):
-//    x = x_product(a, b)
-//    if x < 0:
-//        return LEFT
-//    elif x > 0: 
-//        return RIGHT
-//    else:
-//        return None
-//
-//def v_sub(a, b):
-//    return (a[0]-b[0], a[1]-b[1])
-//
-//def x_product(a, b):
-//    return a[0]*b[1]-a[1]*b[0]
-
-
-#define RIGHT  1
-#define LEFT  -1
-#define NONE   0
-
-bool inside_convex_polygon(SDL_Point point, SDL_Point vertices[], length) {
-  bool      previous_side, current_side;
-  SDL_Point a, b;
-  SDL_Point affine_segment, affine_point;
-  
-  int n;
-  for (n = 0; n < length; n++) {
-    a = vertices[n];
-    b = vertices[(n + 1) % length];
-
-    affine_segment = v_sub(a, b);
-    affine_point   = v_sub(point, b);
-    current_side   = get_side(affine_segment, affine_point);
-
-    if (current_side == NONE) {
-      return false;
-    } else if (previous_side == NONE) {
-      previous_side = current_side
-    } else if (previous_side != current_side) {
-      return false;
-    }
-
-    return true;
-  }
-}
-
-int get_side(SDL_Point a, SDL_Point b) {
-  SDL_Point x = x_product(a, b);
-
-  if (x < 0) {
-    return LEFT;
-  } else if (x > 0) {
-    return RIGHT;
-  }
-
-  return NONE;
-}
-
-SDL_Point v_sub(SDL_Point a, SDL_Point b) {
-  return (SDL_Point){(a.x - b.x), (a.y - b.y)};
-}
-
-int x_product(SDL_Point a, SDL_Point b) {
-  return ((a.x * b.y) - (a.y * b.x));
 }
