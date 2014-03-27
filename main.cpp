@@ -161,3 +161,85 @@ int main(int argc, char **argv) {
   
   return 0;
 }
+
+//def inside_convex_polygon(point, vertices):
+//    previous_side = None
+//    n_vertices = len(vertices)
+//    for n in xrange(n_vertices):
+//        a, b = vertices[n], vertices[(n+1)%n_vertices]
+//        affine_segment = v_sub(b, a)
+//        affine_point = v_sub(point, a)
+//        current_side = get_side(affine_segment, affine_point)
+//        if current_side is None:
+//            return False #outside or over an edge
+//        elif previous_side is None: #first segment
+//            previous_side = current_side
+//        elif previous_side != current_side:
+//            return False
+//    return True
+//
+//def get_side(a, b):
+//    x = x_product(a, b)
+//    if x < 0:
+//        return LEFT
+//    elif x > 0: 
+//        return RIGHT
+//    else:
+//        return None
+//
+//def v_sub(a, b):
+//    return (a[0]-b[0], a[1]-b[1])
+//
+//def x_product(a, b):
+//    return a[0]*b[1]-a[1]*b[0]
+
+
+#define RIGHT  1
+#define LEFT  -1
+#define NONE   0
+
+bool inside_convex_polygon(SDL_Point point, SDL_Point vertices[], length) {
+  bool      previous_side, current_side;
+  SDL_Point a, b;
+  SDL_Point affine_segment, affine_point;
+  
+  int n;
+  for (n = 0; n < length; n++) {
+    a = vertices[n];
+    b = vertices[(n + 1) % length];
+
+    affine_segment = v_sub(a, b);
+    affine_point   = v_sub(point, b);
+    current_side   = get_side(affine_segment, affine_point);
+
+    if (current_side == NONE) {
+      return false;
+    } else if (previous_side == NONE) {
+      previous_side = current_side
+    } else if (previous_side != current_side) {
+      return false;
+    }
+
+    return true;
+  }
+}
+
+int get_side(SDL_Point a, SDL_Point b) {
+  SDL_Point x = x_product(a, b);
+
+  if (x < 0) {
+    return LEFT;
+  } else if (x > 0) {
+    return RIGHT;
+  }
+
+  return NONE;
+}
+
+SDL_Point v_sub(SDL_Point a, SDL_Point b) {
+  return (SDL_Point){(a.x - b.x), (a.y - b.y)};
+}
+
+int x_product(SDL_Point a, SDL_Point b) {
+  return ((a.x * b.y) - (a.y * b.x));
+}
