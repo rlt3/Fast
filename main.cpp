@@ -1,20 +1,12 @@
-#include <iostream>
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <time.h>
 
 #include <SDL2/SDL.h>
 
-bool point_inside(SDL_Point p, SDL_Point p1, SDL_Point p2, SDL_Point p3) {
-  float alpha = 
-    ((float)((p2.y - p3.y)*(p.x - p3.x) + (p3.x - p2.x)*(p.y - p3.y)) /
-            ((p2.y - p3.y)*(p1.x - p3.x) + (p3.x - p2.x)*(p1.y - p3.y)));
-
-  float beta  = 
-    ((float)((p3.y - p1.y)*(p.x - p3.x) + (p1.x - p3.x)*(p.y - p3.y)) /
-            ((p2.y - p3.y)*(p1.x - p3.x) + (p3.x - p2.x)*(p1.y - p3.y)));
-
-  float gamma = (float)(1.0f - alpha - beta);
-
-  return (alpha >= 0 && beta >= 0 && gamma >= 0);
-}
+#include "Direction.hpp"
+#include "Entity.hpp"
 
 #define RIGHT  1
 #define LEFT  -1
@@ -55,8 +47,10 @@ bool inside_convex_polygon(SDL_Point point, SDL_Point vertices[], int length) {
     current_side   = get_side(affine_segment, affine_point);
 
     if (current_side == NONE) {
-      return false; /* outside or over an edge */
-    } else if (previous_side == NONE) { /* First Segment */
+      /* outside or over an edge */
+      return false;
+    } else if (previous_side == NONE) { 
+      /* First Segment */
       previous_side = current_side;
     } else if (previous_side != current_side) {
       return false;
@@ -77,7 +71,9 @@ int main(int argc, char **argv) {
   SDL_Renderer *render;
   SDL_Event     event;
 
-  bool          game      = true;
+  Entity player;
+
+  bool          game = true;
 
   if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
     sdl_error("SDL_Init Error");
@@ -108,11 +104,46 @@ int main(int argc, char **argv) {
             case SDLK_ESCAPE: case SDL_QUIT:
               game = false;
               break;
+
+            case SDLK_w: case SDLK_UP: case SDLK_k:
+              player.set_state(Direction::UP);
+              break;
+
+            case SDLK_a: case SDLK_LEFT: case SDLK_h:
+              //player.set_state(Direction::LEFT);
+              player.set_state(3);
+              break;
+
+            case SDLK_s: case SDLK_DOWN: case SDLK_j:
+              player.set_state(Direction::DOWN);
+              break;
+
+            case SDLK_d: case SDLK_RIGHT: case SDLK_l:
+              //player.set_state(Direction::RIGHT);
+              player.set_state(1);
+              break;
+
+            case SDLK_LSHIFT: case SDLK_RSHIFT:
+              player.movement.speed_up();
+              break;
+
+            default:
+              break;
           }
           break;
 
+        case SDL_KEYUP:
+          player.set_state(10);
+          switch (event.key.keysym.sym) {
+          case SDLK_LSHIFT: case SDLK_RSHIFT:
+            player.movement.slow_down();
+            break;
+          }
+          break;
       }
     }
+
+    player.update(SDL_GetTicks());
 
     /* Set color to black and clear screen */
     SDL_SetRenderDrawColor(render, 0, 0, 0, 255);
@@ -159,6 +190,9 @@ int main(int argc, char **argv) {
         }
       }
     }
+
+    SDL_Rect location = player.location();
+    printf("(%d, %d)\n", location.x, location.y);
 
     SDL_RenderPresent(render);
   }

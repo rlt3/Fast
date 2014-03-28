@@ -2,7 +2,7 @@
 #define DEARTH_ENTITY_HPP
 
 #include <stdint.h>
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #include "Vector.hpp"
 
 /*
