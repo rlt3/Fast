@@ -14,5 +14,8 @@ $(EXECUTABLE): $(OBJECTS)
 .cpp.o:
 	$(CC) $(CFLAGS) $< -o $@
 
+lambda:
+	clang++ -std=c++11 -stdlib=libc++ -framework SDL2 lambda.cpp -o test
+
 clean:
-		rm -rf */*.o *.o fast
+		rm -rf */*.o *.o fast test
