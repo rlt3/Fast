@@ -1,5 +1,5 @@
-#ifndef DEARTH_DIRECTION_HPP
-#define DEARTH_DIRECTION_HPP
+#ifndef DIRECTION_HPP
+#define DIRECTION_HPP
 
 namespace Direction {
   enum direction {

@@ -1,5 +1,5 @@
-#ifndef DEARTH_COORDINATE_HPP
-#define DEARTH_COORDINATE_HPP
+#ifndef COORDINATE_HPP
+#define COORDINATE_HPP
 
 #include <cstdlib>
 

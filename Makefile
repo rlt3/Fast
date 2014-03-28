@@ -1,21 +1,23 @@
-CC=g++
-CFLAGS=-c
-SOURCES=main.cpp Coordinate.cpp Vector.cpp Entity.cpp
-SDLLIBS=-framework SDL2
-FRAMEWORKS=-framework Cocoa
-OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=fast
+CC         := clang++
 
-all: $(SOURCES) $(EXECUTABLE)
-		
-$(EXECUTABLE): $(OBJECTS) 
-	$(CC) -Wall -o $@ $(OBJECTS) $(SDLLIBS) $(FRAMEWORKS)
+LIBRARIES  :=-std=c++11 -stdlib=libc++ 
+FRAMEWORKS :=-framework Cocoa -framework SDL2
 
-.cpp.o:
-	$(CC) $(CFLAGS) $< -o $@
+SRCDIR     := src
+SOURCES    := src/main.cpp src/Coordinate.cpp src/Movement.cpp
 
-lambda:
-	clang++ -std=c++11 -stdlib=libc++ -framework SDL2 lambda.cpp -o test
+OBJDIR     := obj
+OBJECTS    := ${SOURCES:${SRCDIR}/%.cpp=${OBJDIR}/%.o}
+
+EXECUTABLE := fast
+
+all: ${SOURCES} ${EXECUTABLE}
+
+${OBJECTS}: ${OBJDIR}/%.o : ${SRCDIR}/%.cpp
+	$(CC) -c $< -o $@ ${LIBRARIES}
+
+${EXECUTABLE}: ${OBJECTS}
+	${CC} -Wall -o $@ ${OBJECTS} ${LIBRARIES} ${FRAMEWORKS}
 
 clean:
-		rm -rf */*.o *.o fast test
+	rm -f ${OBJDIR}/*.o fast

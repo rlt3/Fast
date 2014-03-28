@@ -42,8 +42,10 @@ public:
   { set_movement(); }
 
   /* Update based on time */
-  void msg(unsigned now) {
-    update(now);
+  //void msg(unsigned now) {
+  //template<typename Functor>
+  void msg(std::function<unsigned long(int)> f) {
+    update(f(magnitude_));
   }
 
   /* Set accelerating */
@@ -54,14 +56,15 @@ public:
   /* How to set it up so once can pass a literal message?
    * movement.msg([]() { accelerating = false; }
    */
-  //void msg(std::function<bool(void)> f) {
-  //  accelerating_ = f();
+  //template<typename Functor>
+  //void msg(Functor f) {
+  //  f();
   //}
 
   /* Set speed */
-  void msg(std::function<int(int)> f) {
-    max_speed_ = f(max_speed_); 
-  }
+  //void msg(std::function<int(int)> f) {
+  //  max_speed_ = f(max_speed_); 
+  //}
 
   /* Get Location */
   struct Location msg(std::function<struct Location(struct Location)> f) {
@@ -111,15 +114,20 @@ int main() {
   vector.msg([]() { return true; });
 
   while (1) {
-    vector.msg(SDL_GetTicks());
+    vector.msg([&](int magnitude) {
+      if (magnitude > 4) {
+        vector.msg([]() { return false; });
+      }
+
+      return SDL_GetTicks();
+    });
 
     struct Location loc = vector.msg([](struct Location loc) { 
-      printf("%d, %d\n", loc.x, loc.y);
       return loc;
     });
 
-    if (loc.x > 10) {
-      vector.msg([]() { return false; });
+    if (loc.x > 20) {
+      break;
     }
   }
 
