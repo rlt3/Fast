@@ -4,7 +4,7 @@ LIBRARIES  :=-std=c++11 -stdlib=libc++
 FRAMEWORKS :=-framework Cocoa -framework SDL2
 
 SRCDIR     := src
-SOURCES    := src/main.cpp src/Coordinate.cpp src/Movement.cpp
+SOURCES    := src/main.cpp src/Coordinate.cpp src/Movement.cpp src/Polygon.cpp
 
 OBJDIR     := obj
 OBJECTS    := ${SOURCES:${SRCDIR}/%.cpp=${OBJDIR}/%.o}

@@ -1,23 +1,23 @@
 #include "Movement.hpp"
 
-Movement::Movement()
-: location_(0, 0)
-, magnitude_(0)
-, mag_max_(5) 
-, direction_(1) 
-, accelerating_(false)
-, friction_(100) 
-, last_(0)
-{ }
+//Movement::Movement()
+// : location_(),
+// , magnitude_(0)
+// , mag_max_(5) 
+// , direction_(1) 
+// , accelerating_(false)
+// , friction_(100) 
+// , last_(0)
+//{ }
 
-Movement::Movement(int x, int y, int magnitude, int speed)
-: location_(x, y)
-, magnitude_(magnitude)
-, mag_max_(speed) 
-, direction_(1) 
-, accelerating_(false)
-, friction_(100) 
-, last_(0)
+Movement::Movement(int x, int y, int speed)
+ : location_{x, y}
+ , magnitude_(0)
+ , mag_max_(speed) 
+ , direction_(1) 
+ , accelerating_(false)
+ , friction_(100) 
+ , last_(0)
 { }
 
 void Movement::update(unsigned now) {
@@ -76,18 +76,18 @@ Location Movement::next(int direction) {
 Location Movement::cardinal(int direction) {
   switch(direction) {
   case Direction::UP:
-    return Location(0, -1);
+    return (Location){0, -1};
 
   case Direction::RIGHT:
-    return Location(1, 0);
+    return (Location){1, 0};
 
   case Direction::DOWN:
-    return Location(0, 1);
+    return (Location){0, 1};
 
   case Direction::LEFT:
-    return Location(-1, 0);
+    return (Location){-1, 0};
 
   default:
-    return Location(0, 0);
+    return (Location){0, 0};
   }
 }

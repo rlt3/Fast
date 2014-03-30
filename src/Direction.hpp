@@ -1,6 +1,8 @@
 #ifndef DIRECTION_HPP
 #define DIRECTION_HPP
 
+#include "Coordinate.hpp"
+
 namespace Direction {
   enum direction {
     UP    = 0,

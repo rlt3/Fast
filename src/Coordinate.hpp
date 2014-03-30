@@ -2,13 +2,11 @@
 #define COORDINATE_HPP
 
 #include <cstdlib>
+#include <SDL2/SDL.h>
 
 struct Coordinate {
   int x;
   int y;
-
-  Coordinate() : x(0), y(0) { }
-  Coordinate(int x, int y) : x(x), y(y) { }
 
   bool operator< (const Coordinate &) const;
   bool operator> (const Coordinate &) const;
@@ -28,5 +26,8 @@ struct Coordinate {
   Coordinate& operator+ (const int &);
   Coordinate& operator- (const int &);
 };
+
+typedef Coordinate Location;
+typedef Coordinate Point;
 
 #endif

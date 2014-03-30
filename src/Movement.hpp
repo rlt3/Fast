@@ -5,12 +5,13 @@
 #include "Direction.hpp"
 #include "Coordinate.hpp"
 
-typedef Coordinate Location;
-
 class Movement {
 public:
-  Movement();
-  Movement(int x, int y, int magnitude, int speed);
+  //Movement();
+  Movement(int x, int y, int speed);
+
+  /* Set the constructor to default for aggregate construction above */
+  Movement() = default;
 
   /* Give object the time */
   void update(unsigned now);
@@ -53,7 +54,7 @@ protected:
   Location next(int direction);
 
 private:
-  Location location_;
+  Location location_ = {0, 0};
 
   int      magnitude_;
   int      mag_max_;
@@ -68,6 +69,12 @@ private:
    * Give the Movement a function which handles its max movement. It would be a
    * lambda that simply always returns the given direction at first. But, it can
    * be updated to check for bounds by another object.
+   */
+
+  /*
+   * Create a Vector class which holds the direction and magnitude. So, instead
+   * of doing if (accelerating) { } or seeing if the magnitude is over or under
+   * the max or seeing which direction is up, just use polymorphism.
    */
 
 };
