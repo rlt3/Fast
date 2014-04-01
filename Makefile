@@ -19,5 +19,8 @@ ${OBJECTS}: ${OBJDIR}/%.o : ${SRCDIR}/%.cpp
 ${EXECUTABLE}: ${OBJECTS}
 	${CC} -Wall -o $@ ${OBJECTS} ${LIBRARIES} ${FRAMEWORKS}
 
+ray: 
+	gcc -o ray main.c -framework Cocoa -framework SDL2
+
 clean:
 	rm -f ${OBJDIR}/*.o fast
