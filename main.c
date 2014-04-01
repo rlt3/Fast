@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdint.h>
 #include <math.h>
 #include <SDL2/SDL.h>
 
@@ -64,8 +65,28 @@ int main() {
   struct Vertex two_seventy = get_point(center, 30, 270);
 
   struct Vertex user        = get_point(center, radius, 90);
+
+  Uint8 *keystate;
   
   while (game) {
+    const Uint8 *keystate = SDL_GetKeyboardState(NULL);
+
+    //continuous-response keys
+    if(keystate[SDL_SCANCODE_W]) {
+      center.angle = (center.angle + 1) % 360;
+    }
+
+    if(keystate[SDL_SCANCODE_A]) {
+      center.x--;
+    }
+
+    if(keystate[SDL_SCANCODE_S]) {
+      center.angle = (center.angle - 1) % 360;
+    }
+
+    if(keystate[SDL_SCANCODE_D]) {
+      center.x++;
+    }
 
     while (SDL_PollEvent(&event)){
       switch (event.type) {
@@ -76,7 +97,6 @@ int main() {
               break;
 
             case SDLK_w: case SDLK_UP: case SDLK_k:
-              center.angle = (center.angle + 1) % 360;
               break;
 
             case SDLK_a: case SDLK_LEFT: case SDLK_h:
