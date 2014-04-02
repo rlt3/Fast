@@ -6,7 +6,8 @@
 #define SCREEN_WIDTH  640
 #define SCREEN_HEIGHT 512
 
-void sdl_error(const char *type) {
+void 
+sdl_error(const char *type) {
   fprintf(stderr, "%s: %s\n", type, SDL_GetError());
   exit(1);
 }
@@ -17,7 +18,8 @@ struct Vertex {
   int angle;
 };
 
-struct Vertex get_point(struct Vertex base, float radius, float angle) {
+struct Vertex 
+get_point(struct Vertex base, float radius, float angle) {
   return (struct Vertex) {
     .x = (base.x + (radius * sin(angle * (M_PI/180)))),
     .y = (base.y + (radius * cos(angle * (M_PI/180)))),
@@ -25,7 +27,8 @@ struct Vertex get_point(struct Vertex base, float radius, float angle) {
   };
 }
 
-int main() {
+int 
+main() {
   SDL_Window   *screen;
   SDL_Renderer *render;
   SDL_Event     event;
@@ -59,33 +62,37 @@ int main() {
   int   x, y;
   int   right, left;
 
-  struct Vertex zero        = get_point(center, 30, 0);
-  struct Vertex ninety      = get_point(center, 30, 90);
-  struct Vertex one_eighty  = get_point(center, 30, 180);
-  struct Vertex two_seventy = get_point(center, 30, 270);
-
-  struct Vertex user        = get_point(center, radius, 90);
-
-  Uint8 *keystate;
+  struct Vertex forward, point_a, point_b;
   
   while (game) {
+
+    /* continuous-response keys */
     const Uint8 *keystate = SDL_GetKeyboardState(NULL);
 
-    //continuous-response keys
+    /*
+     * Using same algorithm to find our lead point away from the center, 
+     * we can use it to find the next point of our center (movement). The
+     * radius in this case becomes our speed.
+     *
+     * We move in the direction of our angle.
+     */
     if(keystate[SDL_SCANCODE_W]) {
-      center.angle = (center.angle + 1) % 360;
-    }
-
-    if(keystate[SDL_SCANCODE_A]) {
-      center.x--;
+      center = get_point(center, 1, center.angle);
     }
 
     if(keystate[SDL_SCANCODE_S]) {
-      center.angle = (center.angle - 1) % 360;
+      center = get_point(center, -1, center.angle);
+    }
+
+    /*
+     * Move the angle of our point left or right.
+     */
+    if(keystate[SDL_SCANCODE_A]) {
+      center.angle = (center.angle + 2) % 360;
     }
 
     if(keystate[SDL_SCANCODE_D]) {
-      center.x++;
+      center.angle = (center.angle - 2) % 360;
     }
 
     while (SDL_PollEvent(&event)){
@@ -95,27 +102,14 @@ int main() {
             case SDLK_ESCAPE: case SDL_QUIT:
               game = false;
               break;
-
-            case SDLK_w: case SDLK_UP: case SDLK_k:
-              break;
-
-            case SDLK_a: case SDLK_LEFT: case SDLK_h:
-              center.x--;
-              break;
-
-            case SDLK_s: case SDLK_DOWN: case SDLK_j:
-              center.angle = (center.angle - 1) % 360;
-              break;
-
-            case SDLK_d: case SDLK_RIGHT: case SDLK_l:
-              center.x++;
-              break;
         }
       }
     }
 
-    /* Update user */
-    user = get_point(center, radius, center.angle);
+    /* Update forward and its points */
+    forward = get_point(center, radius, center.angle);
+    point_a = get_point(center, radius, center.angle + 135);
+    point_b = get_point(center, radius, center.angle - 135);
 
     SDL_SetRenderDrawColor(render, 0, 0, 0, 255); 
     SDL_RenderClear(render);
@@ -125,17 +119,17 @@ int main() {
     SDL_RenderDrawPoint(render, center.x, center.y);
 
     /* Use slope intercept to get line's equation */
-    my = (float)(center.y - user.y);
-    mx = (float)(center.x - user.x);
+    my = (float)(center.y - forward.y);
+    mx = (float)(center.x - forward.x);
     m  = (float)(my/mx);
     b  = center.y - (m * center.x);
 
     /* Find the bounds */
-    if (center.x < user.x) {
+    if (center.x < forward.x) {
       left  = center.x;
-      right = user.x;
+      right = forward.x;
     } else {
-      left  = user.x;
+      left  = forward.x;
       right = center.x;
     }
 
@@ -149,12 +143,14 @@ int main() {
 
     /* Draw end point in red */
     SDL_SetRenderDrawColor(render, 255, 0, 0, 255);
-    SDL_RenderDrawPoint(render, user.x, user.y);
+    SDL_RenderDrawPoint(render, forward.x, forward.y);
+    SDL_RenderDrawPoint(render, point_a.x, point_a.y);
+    SDL_RenderDrawPoint(render, point_b.x, point_b.y);
 
     SDL_RenderPresent(render);
   }
   
   SDL_Quit();
 
-  return 0;
+  return EXIT_SUCCESS;
 }
