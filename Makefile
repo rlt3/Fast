@@ -20,7 +20,7 @@ ${EXECUTABLE}: ${OBJECTS}
 	${CC} -Wall -o $@ ${OBJECTS} ${LIBRARIES} ${FRAMEWORKS}
 
 ray: 
-	gcc -o ray main.c -framework Cocoa -framework SDL2
+	gcc -o ray convert.c polygon.c vertex.c -framework SDL2
 
 clean:
 	rm -f ${OBJDIR}/*.o fast
