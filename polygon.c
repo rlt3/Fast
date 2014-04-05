@@ -47,11 +47,16 @@ polygon_point_inside(struct Vertex point,
 void 
 polygon_bounds(struct Polygon p, float *bounds)
 {
-  /* set the bounds to zero so we can test properly */
   memset(bounds, 0, sizeof(bounds));
 
+  /* set the bounds to something so we can test properly */
+  bounds[BOUND_TOP]    = p.vertices[0].y;
+  bounds[BOUND_RIGHT]  = p.vertices[0].x;
+  bounds[BOUND_BOTTOM] = p.vertices[0].y;
+  bounds[BOUND_LEFT]   = p.vertices[0].x;
+
   int i;
-  for (i = 0; i < p.points; i++) {
+  for (i = 1; i < p.points; i++) {
     if (p.vertices[i].x < bounds[BOUND_LEFT]) {
       bounds[BOUND_LEFT] = p.vertices[i].x;
     }

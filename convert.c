@@ -50,46 +50,12 @@ main()
     .radius   = 100
   };
 
-  bool game = true;
-  
+  bool     game = true;
+  int     speed = 5;
+  Uint32   last = SDL_GetTicks();
   int i, x, y;
 
-  int speed = 5;
-
-  unsigned long last = SDL_GetTicks();
-
   while (game) {
-
-    if (SDL_GetTicks() - last < 250) {
-      last = SDL_GetTicks();
-
-    const Uint8 *keystate = SDL_GetKeyboardState(NULL);
-
-    /* Movement up and down */
-    if(keystate[SDL_SCANCODE_W])
-      player.center = vertex_shift(player.center,  speed);
-
-    if(keystate[SDL_SCANCODE_S])
-      player.center = vertex_shift(player.center, -speed);
-
-    /* Turning left or right */
-    if(keystate[SDL_SCANCODE_A])
-      player.center.angle = (player.center.angle + 2) % 360;
-
-    if(keystate[SDL_SCANCODE_D])
-      player.center.angle = (player.center.angle - 2) % 360;
-
-    if(keystate[SDL_SCANCODE_LSHIFT])
-      speed = 8;
-
-    /* Update all the vertices of the polygon to new locations */
-    for (i = 0; i < player.points; i++) {
-      player.vertices[i] = vertex_point_to(player.center, 
-                                           player.vertices[i], 
-                                           player.radius);
-    }
-
-    }
 
     while (SDL_PollEvent(&event)){
       switch (event.type) {
@@ -102,34 +68,65 @@ main()
       }
     }
 
-    /* Clear the screen */
-    SDL_SetRenderDrawColor(render, 0, 0, 0, 255); 
-    SDL_RenderClear(render);
+    /* around 24 frames a second */
+    if (SDL_GetTicks() - last > 40) {
+      last = SDL_GetTicks();
 
-    /* Get our bounds which is set in order top 0, right 1, bottom 2, left 3 */
-    polygon_bounds(player, player.bounds);
+      const Uint8 *keystate = SDL_GetKeyboardState(NULL);
 
-    /* Fill our polygon ! */
-    //for (x = player.bounds[3]; x < player.bounds[1]; x++) {
-    //  for (y = player.bounds[0]; y < player.bounds[2]; y++) {
+      /* Movement up and down */
+      if(keystate[SDL_SCANCODE_W])
+        player.center = vertex_shift(player.center,  speed);
 
-    //    if (polygon_point_inside((struct Vertex){x, y}, 
-    //                             player.vertices, 
-    //                             player.points)) 
-    //    {
-    //      SDL_SetRenderDrawColor(render, 0, 255, 0, 255);
-    //      SDL_RenderDrawPoint(render, x, y);
-    //    }
+      if(keystate[SDL_SCANCODE_S])
+        player.center = vertex_shift(player.center, -speed);
 
-    //  }
-    //}
-    
-    SDL_SetRenderDrawColor(render, 0, 255, 0, 255);
-    for (i = 0; i < player.points; i++) {
-      SDL_RenderDrawPoint(render, player.vertices[i].x, player.vertices[i].y);
+      /* Turning left or right */
+      if(keystate[SDL_SCANCODE_A])
+        player.center.angle = (player.center.angle + 2) % 360;
+
+      if(keystate[SDL_SCANCODE_D])
+        player.center.angle = (player.center.angle - 2) % 360;
+
+      /* Speeding up ! */
+      if(keystate[SDL_SCANCODE_LSHIFT])
+        speed = 8;
+
+
+      /* Update all the vertices of the polygon to new locations */
+      for (i = 0; i < player.points; i++) {
+        player.vertices[i] = vertex_point_to(player.center, 
+                                             player.vertices[i], 
+                                             player.radius);
+      }
+
+      /* Clear the screen */
+      SDL_SetRenderDrawColor(render, 0, 0, 0, 255); 
+      SDL_RenderClear(render);
+
+      /* Get our bounds which is set in order top 0, right 1, bottom 2, left 3 */
+      polygon_bounds(player, player.bounds);
+
+      SDL_SetRenderDrawColor(render, 0, 255, 0, 255);
+      SDL_RenderDrawPoint(render, player.bounds[3], player.bounds[0]);
+      SDL_RenderDrawPoint(render, player.bounds[1], player.bounds[2]);
+
+      /* Fill our polygon ! */
+      for (x = player.bounds[3]; x < player.bounds[1]; x++) {
+        for (y = player.bounds[0]; y < player.bounds[2]; y++) {
+
+          if (polygon_point_inside((struct Vertex){x, y}, 
+                                   player.vertices, 
+                                   player.points)) 
+          {
+            SDL_RenderDrawPoint(render, x, y);
+          }
+
+        }
+      }
+
+      SDL_RenderPresent(render);
     }
-
-    SDL_RenderPresent(render);
 
   }
 
