@@ -138,7 +138,7 @@ main() {
     .angle = 0
   };
 
-  float radius = 100;
+  //float radius = 100;
 
   float mx, my, m, b;
   int   x, y;

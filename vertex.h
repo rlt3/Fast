@@ -7,12 +7,10 @@ struct Vertex {
   float x;
   float y;
   int angle;
+  int radius;
 };
 
-struct Vertex vertex_point_to(struct Vertex base, 
-                              struct Vertex vertex, 
-                              float         radius);
-
+struct Vertex vertex_point_to(struct Vertex base, struct Vertex vertex);
 struct Vertex vertex_shift(struct Vertex vertex, float amount);
 struct Vertex _create_vertex(float x, float y, float radius, float angle);
 

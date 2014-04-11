@@ -38,21 +38,27 @@ main()
    * our angles do. They determine the shape of our shape!
    */
   struct Vertex vertices[] = {
-    {100, 100,  135},
-    {100, 100,    0},
-    {100, 100, -135}
+    {100, 100,   45, 100},
+    {100, 100,    0,  75},
+    {100, 100,  -45, 100},
+    {100, 100, -135, 100},
+    {100, 100,  180,  75},
+    {100, 100,  135, 100}
   };
 
   struct Polygon player    = { 
     .center   = { SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 0 },
     .vertices = vertices,
-    .points   = 3,
-    .radius   = 100
+    .points   = 6
+    //.radius   = 100
   };
 
+  /* our game state (running?), speed of movement, and the last updated time */
   bool     game = true;
   int     speed = 5;
   Uint32   last = SDL_GetTicks();
+
+  /* for incrementing in loops */
   int i, x, y;
 
   while (game) {
@@ -95,18 +101,17 @@ main()
 
       /* Update all the vertices of the polygon to new locations */
       for (i = 0; i < player.points; i++) {
-        player.vertices[i] = vertex_point_to(player.center, 
-                                             player.vertices[i], 
-                                             player.radius);
+        player.vertices[i] = vertex_point_to(player.center, player.vertices[i]);
       }
 
       /* Clear the screen */
       SDL_SetRenderDrawColor(render, 0, 0, 0, 255); 
       SDL_RenderClear(render);
 
-      /* Get our bounds which is set in order top 0, right 1, bottom 2, left 3 */
+      /* Get bounds which is set in order top 0, right 1, bottom 2, left 3 */
       polygon_bounds(player, player.bounds);
 
+      /* Draw the bounds for fun */
       SDL_SetRenderDrawColor(render, 0, 255, 0, 255);
       SDL_RenderDrawPoint(render, player.bounds[3], player.bounds[0]);
       SDL_RenderDrawPoint(render, player.bounds[1], player.bounds[2]);

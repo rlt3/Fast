@@ -5,9 +5,9 @@
  * keep the new vertex's angle the same as B's angle.
  */
 struct Vertex 
-vertex_point_to(struct Vertex a, struct Vertex b, float radius)
+vertex_point_to(struct Vertex a, struct Vertex b)
 {
-  struct Vertex p = _create_vertex(a.x, a.y, radius, (b.angle + a.angle));
+  struct Vertex p = _create_vertex(a.x, a.y, b.radius, (b.angle + a.angle));
   p.angle = b.angle;
   return p;
 }
@@ -27,6 +27,7 @@ _create_vertex(float x, float y, float radius, float angle)
   return (struct Vertex) {
     .x = (x + (radius * sin(angle * (M_PI/180)))),
     .y = (y + (radius * cos(angle * (M_PI/180)))),
-    .angle = angle
+    .angle  = angle,
+    .radius = radius
   };
 }

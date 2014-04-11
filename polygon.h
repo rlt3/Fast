@@ -15,7 +15,6 @@ struct Polygon {
   struct Vertex  center;   
   struct Vertex *vertices; 
   int            points;   
-  int            radius;   
 
   float          bounds[4];
 };
