@@ -83,11 +83,21 @@ void Display_Render(SDL_Renderer* displayRenderer)
     /* Move Right 3 Units */
     glTranslatef( 3.0f, 0.0f, 0.0f );
 
-    glBegin( GL_QUADS );                /* Draw A Quad */
+    //glBegin( GL_QUADS );                /* Draw A Quad */
+    //  glVertex3f( -1.0f,  1.0f, 0.0f ); /* Top Left */
+    //  glVertex3f(  1.0f,  1.0f, 0.0f ); /* Top Right */
+    //  glVertex3f(  1.0f, -1.0f, 0.0f ); /* Bottom Right */
+    //  glVertex3f( -1.0f, -1.0f, 0.0f ); /* Bottom Left */
+    //glEnd( );                           /* Done Drawing The Quad */
+
+    /* The order of these matter just like they did before ! */
+    glBegin( GL_POLYGON );                /* Draw A Quad */
       glVertex3f( -1.0f,  1.0f, 0.0f ); /* Top Left */
       glVertex3f(  1.0f,  1.0f, 0.0f ); /* Top Right */
+      glVertex3f(  1.5f,  0.0f, 0.0f ); /* Mid Right */
       glVertex3f(  1.0f, -1.0f, 0.0f ); /* Bottom Right */
       glVertex3f( -1.0f, -1.0f, 0.0f ); /* Bottom Left */
+      glVertex3f( -1.5f,  0.0f, 0.0f ); /* Mid Left */
     glEnd( );                           /* Done Drawing The Quad */
     
     SDL_RenderPresent(displayRenderer);
