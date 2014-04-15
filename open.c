@@ -63,42 +63,33 @@ int Display_SetViewport( int width, int height )
     return 1;
 }
 
-void Display_Render(SDL_Renderer* displayRenderer)
+void Display_Render(SDL_Renderer* displayRenderer, GLfloat vertices[][3])
 {
     /* Set the background black */
     glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+
     /* Clear The Screen And The Depth Buffer */
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-    /* Move Left 1.5 Units And Into The Screen 6.0 */
     glLoadIdentity();
-    glTranslatef( -1.5f, 0.0f, -6.0f );
 
-    glBegin( GL_TRIANGLES );            /* Drawing Using Triangles */
-      glVertex3f(  0.0f,  1.0f, 0.0f ); /* Top */
-      glVertex3f( -1.0f, -1.0f, 0.0f ); /* Bottom Left */
-      glVertex3f(  1.0f, -1.0f, 0.0f ); /* Bottom Right */
-    glEnd( );                           /* Finished Drawing The Triangle */
-
-    /* Move Right 3 Units */
-    glTranslatef( 3.0f, 0.0f, 0.0f );
-
-    //glBegin( GL_QUADS );                /* Draw A Quad */
-    //  glVertex3f( -1.0f,  1.0f, 0.0f ); /* Top Left */
-    //  glVertex3f(  1.0f,  1.0f, 0.0f ); /* Top Right */
-    //  glVertex3f(  1.0f, -1.0f, 0.0f ); /* Bottom Right */
-    //  glVertex3f( -1.0f, -1.0f, 0.0f ); /* Bottom Left */
-    //glEnd( );                           /* Done Drawing The Quad */
+    /* 
+     * 1.0f represents the entire width or height of screen. Going ``into'' the
+     * screen (negative z index) offsets 1.0f by that much. In this case it is
+     * 1.0f/30.0f
+     *
+     * OpenGL uses all 4 quadrants. The center is 0, 0; This is the center of
+     * the polygon we will draw.
+     */
+    glTranslatef(-1.5f, 0.0f, -30.0f);
 
     /* The order of these matter just like they did before ! */
-    glBegin( GL_POLYGON );                /* Draw A Quad */
-      glVertex3f( -1.0f,  1.0f, 0.0f ); /* Top Left */
-      glVertex3f(  1.0f,  1.0f, 0.0f ); /* Top Right */
-      glVertex3f(  1.5f,  0.0f, 0.0f ); /* Mid Right */
-      glVertex3f(  1.0f, -1.0f, 0.0f ); /* Bottom Right */
-      glVertex3f( -1.0f, -1.0f, 0.0f ); /* Bottom Left */
-      glVertex3f( -1.5f,  0.0f, 0.0f ); /* Mid Left */
-    glEnd( );                           /* Done Drawing The Quad */
+    glBegin(GL_POLYGON);
+      int i;
+      for (i = 0; i < 6; i++) {
+        glVertex3fv(&vertices[i][0]);
+      }
+    glEnd();
     
     SDL_RenderPresent(displayRenderer);
 }
@@ -107,6 +98,16 @@ void Display_Render(SDL_Renderer* displayRenderer)
 int
 main(int argc, char *argv[])
 {
+    
+    GLfloat vertices[6][3] = {
+      { -1.0f,  1.0f, 0.0f },
+      {  1.0f,  1.0f, 0.0f },
+      {  1.5f,  0.0f, 0.0f },
+      {  1.0f, -1.0f, 0.0f },
+      { -1.0f, -1.0f, 0.0f },
+      { -1.5f,  0.0f, 0.0f }
+    };
+
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window* displayWindow;
     SDL_Renderer* displayRenderer;
@@ -124,8 +125,7 @@ main(int argc, char *argv[])
     
     Display_SetViewport(800, 600);
     
-    Display_Render(displayRenderer);
-    
+    Display_Render(displayRenderer, vertices);
     
     SDL_Delay(5000);
     SDL_Quit();
