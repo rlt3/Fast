@@ -11,11 +11,13 @@
 #include <OpenGL/glu.h>
 
 #define DIMENSION 3
-#define N_POINTS  6
+#define N_POINTS  3
 
 struct Polygon {
   float center[DIMENSION];
-  float vertices[N_POINTS][DIMENSION];
+  float vertices[N_POINTS];
+  int   angle;
+  int   radius;
 };
 
 void 
@@ -82,7 +84,7 @@ glTranslatefv(GLfloat *point) {
 }
 
 void 
-Display_Render(SDL_Renderer* displayRenderer, struct Polygon polygon)
+Display_Render(SDL_Renderer* displayRenderer, struct Polygon p)
 {
   /* Set the background black */
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -100,13 +102,22 @@ Display_Render(SDL_Renderer* displayRenderer, struct Polygon polygon)
    * OpenGL uses all 4 quadrants. The center is 0, 0; This is the center of
    * the polygon we will draw.
    */
-  glTranslatefv(&polygon.center[0]);
+  glTranslatefv(&p.center[0]);
 
   /* The order of these matter just like they did before ! */
   glBegin(GL_POLYGON);
     int i;
     for (i = 0; i < N_POINTS; i++) {
-      glVertex3fv(&polygon.vertices[i][0]);
+      /* 
+       * Get the x, y from the angle of the vertices ! This way we do not have
+       * to keep state except for where the object would be centered. We do need
+       * to know the original construction, but that is handled by the angles.
+       */
+      glVertex3f(
+        sin((p.vertices[i] + p.angle) * (M_PI/180)),
+        cos((p.vertices[i] + p.angle) * (M_PI/180)),
+        0.0f
+      );
     }
   glEnd();
   
@@ -118,14 +129,9 @@ main(int argc, char *argv[])
 {
   struct Polygon polygon = (struct Polygon) {
     .center   = { 0.0f, 0.0f, -30.0f },
-    .vertices = {
-      { -1.0f,  1.0f, 0.0f },
-      {  1.0f,  1.0f, 0.0f },
-      {  1.5f,  0.0f, 0.0f },
-      {  1.0f, -1.0f, 0.0f },
-      { -1.0f, -1.0f, 0.0f },
-      { -1.5f,  0.0f, 0.0f }
-    }
+    .vertices = { 0, 135, -135 },
+    .angle    = 90,
+    .radius   = 50
   };
 
   SDL_Init(SDL_INIT_VIDEO);
