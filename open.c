@@ -105,22 +105,50 @@ Display_Render(SDL_Renderer* displayRenderer, struct Polygon p)
   glTranslatefv(&p.center[0]);
 
   /* The order of these matter just like they did before ! */
-  glBegin(GL_POLYGON);
+  //glBegin(GL_POLYGON);
+  //  int i;
+  //  for (i = 0; i < N_POINTS; i++) {
+  //    /* 
+  //     * Get the x, y from the angle of the vertices ! This way we do not have
+  //     * to keep state except for where the object would be centered. We do need
+  //     * to know the original construction, but that is handled by the angles.
+  //     */
+  //    glVertex3f(
+  //      sin((p.vertices[i] + p.angle) * (M_PI/180)),
+  //      cos((p.vertices[i] + p.angle) * (M_PI/180)),
+  //      0.0f
+  //    );
+  //  }
+  //glEnd();
+  
+  /* Make a circle out of triangles */
+  glBegin(GL_TRIANGLE_FAN);
+    /* center */
+    glVertex3f(0.0f, 0.0f, 0.0f);
+
+    /* Every 10 degrees, plot a point of a triangle */
     int i;
-    for (i = 0; i < N_POINTS; i++) {
-      /* 
-       * Get the x, y from the angle of the vertices ! This way we do not have
-       * to keep state except for where the object would be centered. We do need
-       * to know the original construction, but that is handled by the angles.
-       */
+    for (i = 0; i <= 360; i = i + 10) {
       glVertex3f(
-        sin((p.vertices[i] + p.angle) * (M_PI/180)),
-        cos((p.vertices[i] + p.angle) * (M_PI/180)),
+        sin(i * (M_PI/180)),
+        cos(i * (M_PI/180)),
         0.0f
       );
     }
   glEnd();
-  
+
+  glTranslatef(-10.0f, 0.0f, 0.0f);
+
+  /* Does using Fan mean I have to have a right triangle? No. */
+  glBegin(GL_TRIANGLE_FAN);
+    /* center */
+    glVertex3f(0.0f, 0.0f, 0.0f);
+
+    glVertex3f(0.0f, 1.0f, 0.0f);
+    glVertex3f(1.0f, -0.5f, 0.0f);
+  glEnd();
+
+
   SDL_RenderPresent(displayRenderer);
 }
 
