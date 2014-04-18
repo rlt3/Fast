@@ -85,7 +85,7 @@ glTranslatefv(GLfloat *point) {
 }
 
 void 
-Display_Render(SDL_Renderer* displayRenderer, struct Polygon p)
+Display_Render(SDL_Renderer* displayRenderer, struct Polygon polygon)
 {
   /* Set the background black */
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -103,77 +103,39 @@ Display_Render(SDL_Renderer* displayRenderer, struct Polygon p)
    * OpenGL uses all 4 quadrants. The center is 0, 0; This is the center of
    * the polygon we will draw.
    */
-  glTranslatefv(&p.center[0]);
-
-  /* Draw a square */
-  glBegin(GL_TRIANGLE_FAN);
-    /* center */
-    glVertex3f(0.0f, 0.0f, 0.0f);
-
-    /* Top right corner */
-    glVertex3f(1.5f, 1.0f, 0.0f);
-    //glVertex3f(1.0f, 1.0f, 0.0f);
-    //glVertex3f(1.0f, 1.0f, 0.0f);
-
-    /* bottom right corner */
-    glVertex3f(1.5f, -1.0f, 0.0f);
-    //glVertex3f(1.0f, -1.0f, 0.0f);
-    //glVertex3f(1.0f, -1.0f, 0.0f);
-
-    /* bottom left corner */
-    glVertex3f(-1.5f, -1.0f, 0.0f);
-    //glVertex3f(-1.0f, -1.0f, 0.0f);
-    //glVertex3f(-1.0f, -1.0f, 0.0f);
-
-    /* top left corner */
-    glVertex3f(-1.5f, 1.0f, 0.0f);
-    //glVertex3f(-1.0f, 1.0f, 0.0f);
-    //glVertex3f(-1.0f, 1.0f, 0.0f);
-
-    /* connect top left to top right */
-    glVertex3f(1.5f, 1.0f, 0.0f);
-  glEnd();
-
-  glTranslatef(-10.0f, 0.0f, 0.0f);
+  glTranslatef(0.0f, 0.0f, -5.0f);
 
   /* Draw rounded square */
   glBegin(GL_TRIANGLE_FAN);
+
     /* center */
     glVertex3f(0.0f, 0.0f, 0.0f);
 
-    float radius = 1;
+    int   i;
+    float t;
 
-    int   i; 
-    float x, y;
-    float firstx, firsty;
+    float p[5][2] = {
+      { 0.0f,  1.0f },
+      { 2.5f,  0.0f },
+      { 0.0f, -1.0f },
+    };
 
-    for (i = 20; i <= 60; i = i + 5) {
-      x = radius * cos(i * (M_PI/180));
-      y = radius * sin(i * (M_PI/180));
-      glVertex3f(x, y, 0.0f);
+    /*
+     * Adjust the center point here for the curve. If points 0, 1, 2 lie on the
+     * same y or x point, i.e. make a straight line, then the bezier curve 
+     * produces a straight line.
+     *
+     * So, we can adjust the center point based on speed to make the object move
+     * through space.
+     */
+
+    for (t = 0.0f; t <= 1.1f; t = t + 0.1f) {
+      glVertex2f(
+        (1 - t) * (1 - t) * p[0][0] + 2 * (1 - t) * t * p[1][0] + t * t * p[2][0],
+        (1 - t) * (1 - t) * p[0][1] + 2 * (1 - t) * t * p[1][1] + t * t * p[2][1]
+      );
     }
 
-    for (i = 120; i <= 160; i = i + 5) {
-      x = radius * cos(i * (M_PI/180));
-      y = radius * sin(i * (M_PI/180));
-      glVertex3f(x, y, 0.0f);
-    }
-
-    for (i = 200; i <= 240; i = i + 5) {
-      x = radius * cos(i * (M_PI/180));
-      y = radius * sin(i * (M_PI/180));
-      glVertex3f(x, y, 0.0f);
-    }
-
-    for (i = 300; i <= 340; i = i + 5) {
-      x = radius * cos(i * (M_PI/180));
-      y = radius * sin(i * (M_PI/180));
-      glVertex3f(x, y, 0.0f);
-    }
-
-    x = radius * cos(20 * (M_PI/180));
-    y = radius * sin(20 * (M_PI/180));
-    glVertex3f(x, y, 0.0f);
   glEnd();
 
 
