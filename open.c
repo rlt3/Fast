@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include <math.h>
 
 #include <SDL2/SDL.h>
@@ -104,48 +105,75 @@ Display_Render(SDL_Renderer* displayRenderer, struct Polygon p)
    */
   glTranslatefv(&p.center[0]);
 
-  /* The order of these matter just like they did before ! */
-  //glBegin(GL_POLYGON);
-  //  int i;
-  //  for (i = 0; i < N_POINTS; i++) {
-  //    /* 
-  //     * Get the x, y from the angle of the vertices ! This way we do not have
-  //     * to keep state except for where the object would be centered. We do need
-  //     * to know the original construction, but that is handled by the angles.
-  //     */
-  //    glVertex3f(
-  //      sin((p.vertices[i] + p.angle) * (M_PI/180)),
-  //      cos((p.vertices[i] + p.angle) * (M_PI/180)),
-  //      0.0f
-  //    );
-  //  }
-  //glEnd();
-  
-  /* Make a circle out of triangles */
+  /* Draw a square */
   glBegin(GL_TRIANGLE_FAN);
     /* center */
     glVertex3f(0.0f, 0.0f, 0.0f);
 
-    /* Every 10 degrees, plot a point of a triangle */
-    int i;
-    for (i = 0; i <= 360; i = i + 10) {
-      glVertex3f(
-        sin(i * (M_PI/180)),
-        cos(i * (M_PI/180)),
-        0.0f
-      );
-    }
+    /* Top right corner */
+    glVertex3f(1.5f, 1.0f, 0.0f);
+    //glVertex3f(1.0f, 1.0f, 0.0f);
+    //glVertex3f(1.0f, 1.0f, 0.0f);
+
+    /* bottom right corner */
+    glVertex3f(1.5f, -1.0f, 0.0f);
+    //glVertex3f(1.0f, -1.0f, 0.0f);
+    //glVertex3f(1.0f, -1.0f, 0.0f);
+
+    /* bottom left corner */
+    glVertex3f(-1.5f, -1.0f, 0.0f);
+    //glVertex3f(-1.0f, -1.0f, 0.0f);
+    //glVertex3f(-1.0f, -1.0f, 0.0f);
+
+    /* top left corner */
+    glVertex3f(-1.5f, 1.0f, 0.0f);
+    //glVertex3f(-1.0f, 1.0f, 0.0f);
+    //glVertex3f(-1.0f, 1.0f, 0.0f);
+
+    /* connect top left to top right */
+    glVertex3f(1.5f, 1.0f, 0.0f);
   glEnd();
 
   glTranslatef(-10.0f, 0.0f, 0.0f);
 
-  /* Does using Fan mean I have to have a right triangle? No. */
+  /* Draw rounded square */
   glBegin(GL_TRIANGLE_FAN);
     /* center */
     glVertex3f(0.0f, 0.0f, 0.0f);
 
-    glVertex3f(0.0f, 1.0f, 0.0f);
-    glVertex3f(1.0f, -0.5f, 0.0f);
+    float radius = 1;
+
+    int   i; 
+    float x, y;
+    float firstx, firsty;
+
+    for (i = 20; i <= 60; i = i + 5) {
+      x = radius * cos(i * (M_PI/180));
+      y = radius * sin(i * (M_PI/180));
+      glVertex3f(x, y, 0.0f);
+    }
+
+    for (i = 120; i <= 160; i = i + 5) {
+      x = radius * cos(i * (M_PI/180));
+      y = radius * sin(i * (M_PI/180));
+      glVertex3f(x, y, 0.0f);
+    }
+
+    for (i = 200; i <= 240; i = i + 5) {
+      x = radius * cos(i * (M_PI/180));
+      y = radius * sin(i * (M_PI/180));
+      glVertex3f(x, y, 0.0f);
+    }
+
+    for (i = 300; i <= 340; i = i + 5) {
+      x = radius * cos(i * (M_PI/180));
+      y = radius * sin(i * (M_PI/180));
+      glVertex3f(x, y, 0.0f);
+    }
+
+    x = radius * cos(20 * (M_PI/180));
+    y = radius * sin(20 * (M_PI/180));
+    glVertex3f(x, y, 0.0f);
   glEnd();
 
 
@@ -166,6 +194,7 @@ main(int argc, char *argv[])
   SDL_Window       *displayWindow;
   SDL_Renderer     *displayRenderer;
   SDL_RendererInfo  displayRendererInfo;
+  SDL_Event         event;
 
   SDL_CreateWindowAndRenderer(800, 600, SDL_WINDOW_OPENGL, 
       &displayWindow, &displayRenderer);
@@ -181,8 +210,22 @@ main(int argc, char *argv[])
   Display_InitGL();
   Display_SetViewport(800, 600);
   Display_Render(displayRenderer, polygon);
+
+  bool game = true;
+
+  while (game) {
+    while (SDL_PollEvent(&event)){
+      switch (event.type) {
+        case SDL_KEYDOWN:
+          switch(event.key.keysym.sym) {
+            case SDLK_ESCAPE: case SDL_QUIT:
+              game = false;
+              break;
+        }
+      }
+    }
+  }
   
-  SDL_Delay(5000);
   SDL_Quit();
   
   return 0;
