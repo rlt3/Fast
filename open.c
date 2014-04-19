@@ -159,10 +159,12 @@ Display_Render(SDL_Renderer* displayRenderer, struct Polygon polygon)
 
     /* Till length, increment by quadratic bezier points (3) */
     for (i = 0; i < 6; i = i + 3) {
-      glVertex2f(
-        quad_bezier(p[i][0], p[i+1][0], p[i+2][0], t),
-        quad_bezier(p[i][1], p[i+1][1], p[i+2][1], t)
-      );
+      for (t = 0.0f; t <= 1.1f; t = t + 0.1f) {
+        glVertex2f(
+          quad_bezier(p[i][0], p[i+1][0], p[i+2][0], t),
+          quad_bezier(p[i][1], p[i+1][1], p[i+2][1], t)
+        );
+      }
     }
 
     /* Connect last point back to the first */
