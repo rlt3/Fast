@@ -21,6 +21,21 @@ struct Polygon {
   int   radius;
 };
 
+float
+quad_bezier(float a, float b, float c, float t)
+{
+  return (1 - t) * (1 - t) * a + 2 * (1 - t) * t * b + t * t * c;
+}
+
+float
+cubic_bezier(float a, float b, float c, float d, float t)
+{
+  return pow((1-t), 3) * a +
+         3 * pow((1 - t), 2) * t * b +
+         3 * (1 - t) * pow(t, 2) * c +
+         pow(t, 3) * d;
+}
+
 void 
 Display_InitGL()
 {
@@ -114,30 +129,46 @@ Display_Render(SDL_Renderer* displayRenderer, struct Polygon polygon)
     int   i;
     float t;
 
-    float p[5][2] = {
-      { 0.0f,  1.0f },
-      { 2.5f,  0.0f },
-      { 0.0f, -1.0f },
+    /* 
+     * Using bezier curves, we can control the look of our square just using
+     * the points as handles. If all points in a curve lie on the same axis
+     * (x or y), then those points will get a curve that is straight. Otherwise,
+     * they have a curve. By adjusting the individual points, we can make curves
+     * for the square.
+     */
+    float p[6][2] = {
+      {   1.0f,   1.0f },
+      {   1.0f,   0.0f },
+      {   1.0f,  -1.0f },
+      {  -1.0f,  -1.0f },
+      {  -2.5f,   0.0f },
+      {  -1.0f,   1.0f }
+
+      //{   1.0f,   1.0f },
+      //{   1.0f,  -1.0f },
+      //{  -1.0f,  -1.0f },
+      //{  -1.0f,   1.0f }
     };
 
-    /*
-     * Adjust the center point here for the curve. If points 0, 1, 2 lie on the
-     * same y or x point, i.e. make a straight line, then the bezier curve 
-     * produces a straight line.
-     *
-     * So, we can adjust the center point based on speed to make the object move
-     * through space.
-     */
+    //for (t = 0.0f; t <= 1.1f; t = t + 0.1f) {
+    //  glVertex2f(
+    //    cubic_bezier(p[0][0], p[1][0], p[2][0], p[3][0], t),
+    //    cubic_bezier(p[0][1], p[1][1], p[2][1], p[3][1], t)
+    //  );
+    //}
 
-    for (t = 0.0f; t <= 1.1f; t = t + 0.1f) {
+    /* Till length, increment by quadratic bezier points (3) */
+    for (i = 0; i < 6; i = i + 3) {
       glVertex2f(
-        (1 - t) * (1 - t) * p[0][0] + 2 * (1 - t) * t * p[1][0] + t * t * p[2][0],
-        (1 - t) * (1 - t) * p[0][1] + 2 * (1 - t) * t * p[1][1] + t * t * p[2][1]
+        quad_bezier(p[i][0], p[i+1][0], p[i+2][0], t),
+        quad_bezier(p[i][1], p[i+1][1], p[i+2][1], t)
       );
     }
 
-  glEnd();
+    /* Connect last point back to the first */
+    glVertex2f(p[0][0], p[0][1]);
 
+  glEnd();
 
   SDL_RenderPresent(displayRenderer);
 }
