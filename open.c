@@ -1,5 +1,7 @@
 /*
  * gcc -o test open.c -framework SDL2 -framework OpenGL
+ *
+ * clang -o test open.c -I/Library/Frameworks/SDL2.framework/Headers -F/Library/Frameworks -framework SDL2 -framework OpenGL
  */
 #include <stdlib.h>
 #include <stdio.h>

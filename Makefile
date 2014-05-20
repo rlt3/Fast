@@ -1,6 +1,6 @@
 CC         := clang++
 
-LIBRARIES  :=-std=c++11 -stdlib=libc++ 
+LIBRARIES  :=-I/Library/Frameworks/SDL2.framework/Headers -F/Library/Frameworks -std=c++11 -stdlib=libc++ 
 FRAMEWORKS :=-framework Cocoa -framework SDL2
 
 SRCDIR     := src
