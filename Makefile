@@ -22,5 +22,8 @@ ${EXECUTABLE}: ${OBJECTS}
 ray: 
 	gcc -o ray convert.c polygon.c vertex.c -framework SDL2
 
+open:
+	clang -o test open.c -I/Library/Frameworks/SDL2.framework/Headers -F/Library/Frameworks -framework SDL2 -framework OpenGL
+
 clean:
 	rm -f ${OBJDIR}/*.o fast

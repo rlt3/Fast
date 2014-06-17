@@ -17,25 +17,31 @@
 #define N_POINTS  3
 
 struct Polygon {
-  float center[DIMENSION];
-  float vertices[N_POINTS];
-  int   angle;
-  int   radius;
+  float center[2];
+  float angles[3];
+
+  int    angle;
+  int    radius;
 };
 
-float
-quad_bezier(float a, float b, float c, float t)
+struct Vertex {
+  float x;
+  float y;
+};
+
+struct Vertex
+create_vertex(float x, float y, float radius, float angle)
 {
-  return (1 - t) * (1 - t) * a + 2 * (1 - t) * t * b + t * t * c;
+  return (struct Vertex) {
+    .x = (x + (radius * cos(angle * (M_PI/180)))),
+    .y = (y + (radius * sin(angle * (M_PI/180)))),
+  };
 }
 
-float
-cubic_bezier(float a, float b, float c, float d, float t)
+struct Vertex
+vertex_from_angle(struct Polygon p, float angle)
 {
-  return pow((1-t), 3) * a +
-         3 * pow((1 - t), 2) * t * b +
-         3 * (1 - t) * pow(t, 2) * c +
-         pow(t, 3) * d;
+  return create_vertex(p.center[0], p.center[1], p.radius, (p.angle + angle));
 }
 
 void 
@@ -112,65 +118,22 @@ Display_Render(SDL_Renderer* displayRenderer, struct Polygon polygon)
 
   glLoadIdentity();
 
-  /* 
-   * 1.0f represents the entire width or height of screen. Going ``into'' the
-   * screen (negative z index) offsets 1.0f by that much. In this case it is
-   * 1.0f/30.0f
-   *
-   * OpenGL uses all 4 quadrants. The center is 0, 0; This is the center of
-   * the polygon we will draw.
-   */
-  glTranslatef(0.0f, 0.0f, -5.0f);
+  /* Set the center */
+  glTranslatef(0.0f, 0.0f, -6.0f);
 
-  /* Draw rounded square */
-  glBegin(GL_TRIANGLE_FAN);
+  glBegin(GL_TRIANGLES);
 
-    /* center */
-    glVertex3f(0.0f, 0.0f, 0.0f);
-
-    int   i;
-    float t;
-
-    /* 
-     * Using bezier curves, we can control the look of our square just using
-     * the points as handles. If all points in a curve lie on the same axis
-     * (x or y), then those points will get a curve that is straight. Otherwise,
-     * they have a curve. By adjusting the individual points, we can make curves
-     * for the square.
+    /*
+     * The polygon itself holds an angle. Each vertex is at a set angle
+     * relative to the polygon. So, using some trigonometry we can use those
+     * angles to find where they fix on a coordinate plane.
      */
-    float p[6][2] = {
-      {   1.0f,   1.0f },
-      {   1.0f,   0.0f },
-      {   1.0f,  -1.0f },
-      {  -1.0f,  -1.0f },
-      {  -2.5f,   0.0f },
-      {  -1.0f,   1.0f }
 
-      //{   1.0f,   1.0f },
-      //{   1.0f,  -1.0f },
-      //{  -1.0f,  -1.0f },
-      //{  -1.0f,   1.0f }
-    };
-
-    //for (t = 0.0f; t <= 1.1f; t = t + 0.1f) {
-    //  glVertex2f(
-    //    cubic_bezier(p[0][0], p[1][0], p[2][0], p[3][0], t),
-    //    cubic_bezier(p[0][1], p[1][1], p[2][1], p[3][1], t)
-    //  );
-    //}
-
-    /* Till length, increment by quadratic bezier points (3) */
-    for (i = 0; i < 6; i = i + 3) {
-      for (t = 0.0f; t <= 1.1f; t = t + 0.1f) {
-        glVertex2f(
-          quad_bezier(p[i][0], p[i+1][0], p[i+2][0], t),
-          quad_bezier(p[i][1], p[i+1][1], p[i+2][1], t)
-        );
-      }
+    int i;
+    for (i = 0; i < 3; i++) {
+      struct Vertex vertex = vertex_from_angle(polygon, polygon.angles[i]);
+      glVertex2f(vertex.x, vertex.y);
     }
-
-    /* Connect last point back to the first */
-    glVertex2f(p[0][0], p[0][1]);
 
   glEnd();
 
@@ -181,10 +144,10 @@ int
 main(int argc, char *argv[])
 {
   struct Polygon polygon = (struct Polygon) {
-    .center   = { 0.0f, 0.0f, -30.0f },
-    .vertices = { 0, 135, -135 },
-    .angle    = 90,
-    .radius   = 50
+    .center = { 0.0f, 0.0f },
+    .angles = { 0, -135, 135 },
+    .angle  = 90,
+    .radius = 1
   };
 
   SDL_Init(SDL_INIT_VIDEO);
@@ -206,7 +169,6 @@ main(int argc, char *argv[])
   
   Display_InitGL();
   Display_SetViewport(800, 600);
-  Display_Render(displayRenderer, polygon);
 
   bool game = true;
 
@@ -221,6 +183,7 @@ main(int argc, char *argv[])
         }
       }
     }
+    Display_Render(displayRenderer, polygon);
   }
   
   SDL_Quit();
