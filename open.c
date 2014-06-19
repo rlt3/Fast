@@ -16,17 +16,17 @@
 #define DIMENSION 3
 #define N_POINTS  3
 
+struct Vertex {
+  float x;
+  float y;
+};
+
 struct Polygon {
-  float center[2];
+  struct Vertex center;
   float angles[3];
 
   int    angle;
   int    radius;
-};
-
-struct Vertex {
-  float x;
-  float y;
 };
 
 struct Vertex
@@ -39,9 +39,15 @@ create_vertex(float x, float y, float radius, float angle)
 }
 
 struct Vertex
+vertex_shift(struct Polygon p, float amount)
+{
+  return create_vertex(p.center.x, p.center.y, amount, p.angle);
+}
+
+struct Vertex
 vertex_from_angle(struct Polygon p, float angle)
 {
-  return create_vertex(p.center[0], p.center[1], p.radius, (p.angle + angle));
+  return create_vertex(p.center.x, p.center.y, p.radius, (p.angle + angle));
 }
 
 void 
@@ -144,7 +150,7 @@ int
 main(int argc, char *argv[])
 {
   struct Polygon polygon = (struct Polygon) {
-    .center = { 0.0f, 0.0f },
+    .center = (struct Vertex){ 0.0f, 0.0f },
     .angles = { 0, -135, 135 },
     .angle  = 90,
     .radius = 1
@@ -170,7 +176,9 @@ main(int argc, char *argv[])
   Display_InitGL();
   Display_SetViewport(800, 600);
 
-  bool game = true;
+  bool   game  = true;
+  float  speed = 0.1;
+  Uint32 last = SDL_GetTicks();
 
   while (game) {
     while (SDL_PollEvent(&event)){
@@ -183,7 +191,30 @@ main(int argc, char *argv[])
         }
       }
     }
-    Display_Render(displayRenderer, polygon);
+
+    /* around 24 frames a second */
+    if (SDL_GetTicks() - last > 40) {
+      last = SDL_GetTicks();
+
+      const Uint8 *keystate = SDL_GetKeyboardState(NULL);
+
+      /* Movement up and down */
+      if (keystate[SDL_SCANCODE_W])
+        polygon.center = vertex_shift(polygon, speed);
+
+      if (keystate[SDL_SCANCODE_S])
+        polygon.center = vertex_shift(polygon, -speed);
+
+      /* Turning left or right */
+      if (keystate[SDL_SCANCODE_A])
+        polygon.angle = (polygon.angle + 2) % 360;
+
+      if (keystate[SDL_SCANCODE_D])
+        polygon.angle = (polygon.angle - 2) % 360;
+
+      Display_Render(displayRenderer, polygon);
+    }
+
   }
   
   SDL_Quit();
