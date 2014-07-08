@@ -1,10 +1,10 @@
-CC         := clang++
+CC         := clang
 
-LIBRARIES  :=-I/Library/Frameworks/SDL2.framework/Headers -F/Library/Frameworks -std=c++11 -stdlib=libc++ 
-FRAMEWORKS :=-framework Cocoa -framework SDL2
+LIBRARIES  :=-I/Library/Frameworks/SDL2.framework/Headers -F/Library/Frameworks
+FRAMEWORKS :=-framework Cocoa -framework SDL2 -framework OpenGL
 
 SRCDIR     := src
-SOURCES    := src/main.cpp src/Coordinate.cpp src/Movement.cpp src/Polygon.cpp
+SOURCES    := src/main.c src/vertex.c src/polygon.c
 
 OBJDIR     := obj
 OBJECTS    := ${SOURCES:${SRCDIR}/%.cpp=${OBJDIR}/%.o}
@@ -19,11 +19,8 @@ ${OBJECTS}: ${OBJDIR}/%.o : ${SRCDIR}/%.cpp
 ${EXECUTABLE}: ${OBJECTS}
 	${CC} -Wall -o $@ ${OBJECTS} ${LIBRARIES} ${FRAMEWORKS}
 
-ray: 
-	gcc -o ray convert.c polygon.c vertex.c -framework SDL2
-
 open:
-	clang -o test open.c -I/Library/Frameworks/SDL2.framework/Headers -F/Library/Frameworks -framework SDL2 -framework OpenGL
+	clang -o test open.c vertex.c polygon.c -I/Library/Frameworks/SDL2.framework/Headers -F/Library/Frameworks -framework SDL2 -framework OpenGL
 
 clean:
 	rm -f ${OBJDIR}/*.o fast
