@@ -140,10 +140,19 @@ main(int argc, char *argv[])
   Display_SetViewport(800, 600);
 
   bool   game  = true;
-  float  speed = 0.1;
-  Uint32 last = SDL_GetTicks();
+  float  speed = 0.1f;
+
+  Uint32 last_time  = SDL_GetTicks();
+  Uint32 last_speed = last_time;
 
   while (game) {
+
+    /* Every 10 seconds make the player faster */
+    if (SDL_GetTicks() - last_speed > 10000) {
+      last_speed = SDL_GetTicks();
+      speed = speed + 0.15f;
+    }
+
     while (SDL_PollEvent(&event)){
       switch (event.type) {
         case SDL_KEYDOWN:
@@ -156,8 +165,8 @@ main(int argc, char *argv[])
     }
 
     /* around 24 frames a second */
-    if (SDL_GetTicks() - last > 40) {
-      last = SDL_GetTicks();
+    if (SDL_GetTicks() - last_time > 40) {
+      last_time = SDL_GetTicks();
 
       const Uint8 *keystate = SDL_GetKeyboardState(NULL);
 
@@ -170,10 +179,10 @@ main(int argc, char *argv[])
 
       /* Turning left or right */
       if (keystate[SDL_SCANCODE_A])
-        polygon.angle = (polygon.angle + 2) % 360;
+        polygon.angle = (polygon.angle + 4) % 360;
 
       if (keystate[SDL_SCANCODE_D])
-        polygon.angle = (polygon.angle - 2) % 360;
+        polygon.angle = (polygon.angle - 4) % 360;
 
       Display_Render(displayRenderer, polygon);
     }

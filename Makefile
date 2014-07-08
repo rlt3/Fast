@@ -19,8 +19,5 @@ ${OBJECTS}: ${OBJDIR}/%.o : ${SRCDIR}/%.cpp
 ${EXECUTABLE}: ${OBJECTS}
 	${CC} -Wall -o $@ ${OBJECTS} ${LIBRARIES} ${FRAMEWORKS}
 
-open:
-	clang -o test open.c vertex.c polygon.c -I/Library/Frameworks/SDL2.framework/Headers -F/Library/Frameworks -framework SDL2 -framework OpenGL
-
 clean:
 	rm -f ${OBJDIR}/*.o fast
