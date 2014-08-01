@@ -88,7 +88,7 @@ Display_Render(SDL_Renderer* displayRenderer, struct Polygon polygon)
   glLoadIdentity();
 
   /* Set the center */
-  glTranslatef(0.0f, 0.0f, -6.0f);
+  glTranslatef(0.0f, 0.0f, -10.0f);
 
   glBegin(GL_TRIANGLES);
 
@@ -113,7 +113,7 @@ int
 main(int argc, char *argv[])
 {
   struct Polygon polygon = (struct Polygon) {
-    .center = (struct Vertex){ 0.0f, 0.0f },
+    .center = (struct Vertex){ 0.0f, -3.0f },
     .angles = { 0, -135, 135 },
     .angle  = 90,
     .radius = 1
@@ -170,6 +170,8 @@ main(int argc, char *argv[])
 
       const Uint8 *keystate = SDL_GetKeyboardState(NULL);
 
+      polygon.angle = 90;
+
       /* Movement up and down */
       if (keystate[SDL_SCANCODE_W])
         polygon.center = vertex_shift(polygon, speed);
@@ -178,12 +180,19 @@ main(int argc, char *argv[])
         polygon.center = vertex_shift(polygon, -speed);
 
       /* Turning left or right */
-      if (keystate[SDL_SCANCODE_A])
-        polygon.angle = (polygon.angle + 4) % 360;
+      if (keystate[SDL_SCANCODE_A]) {
+        polygon.angle = 110;
+        polygon.center.x -= 0.25;
+      }
+        //polygon.angle = (polygon.angle + 4) % 360;
 
-      if (keystate[SDL_SCANCODE_D])
-        polygon.angle = (polygon.angle - 4) % 360;
+      if (keystate[SDL_SCANCODE_D]) {
+        polygon.angle = 70;
+        polygon.center.x += 0.25;
+      }
+        //polygon.angle = (polygon.angle - 4) % 360;
 
+      /* Draw everything */
       Display_Render(displayRenderer, polygon);
     }
 
