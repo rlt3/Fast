@@ -13,6 +13,8 @@
 #define DIMENSION 3
 #define N_POINTS  3
 
+#define MAX_ASTEROIDS 16
+
 void 
 Display_InitGL()
 {
@@ -76,8 +78,51 @@ glTranslatefv(GLfloat *point) {
   glTranslatef(point[0], point[1], point[2]);
 }
 
+/* Draw the player's ship */
+void
+display_player(SDL_Renderer* displayRenderer, 
+               struct Polygon player)
+{
+  glBegin(GL_TRIANGLES);
+
+    /*
+     * The polygon itself holds an angle. Each vertex is at a set angle
+     * relative to the polygon. So, using some trigonometry we can use those
+     * angles to find where they fix on a coordinate plane.
+     */
+
+    int i;
+    for (i = 0; i < 3; i++) {
+      struct Vertex vertex = vertex_from_angle(player, player.angles[i]);
+      glVertex2f(vertex.x, vertex.y);
+    }
+
+  glEnd();
+}
+
+/* Draw our asteroids */
+void
+display_asteroids(SDL_Renderer* displayRenderer, 
+                  struct Polygon* asteroids[MAX_ASTEROIDS])
+{
+  glBegin(GL_TRIANGLES);
+    int j, i;
+    for (j = 0; j <= MAX_ASTEROIDS; j++) {
+      if (asteroids[j] == NULL) { continue; }
+
+      for (i = 0; i < 3; i++) {
+        struct Vertex vertex = vertex_from_angle(*asteroids[j], 
+            asteroids[j]->angles[i]);
+        glVertex2f(vertex.x, vertex.y);
+      }
+    }
+
+  glEnd();
+}
+
+/* setup the display to be drawn on */
 void 
-Display_Render(SDL_Renderer* displayRenderer, struct Polygon polygon)
+set_display(SDL_Renderer* displayRenderer)
 {
   /* Set the background black */
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -89,29 +134,20 @@ Display_Render(SDL_Renderer* displayRenderer, struct Polygon polygon)
 
   /* Set the center */
   glTranslatef(0.0f, 0.0f, -10.0f);
+}
 
-  glBegin(GL_TRIANGLES);
-
-    /*
-     * The polygon itself holds an angle. Each vertex is at a set angle
-     * relative to the polygon. So, using some trigonometry we can use those
-     * angles to find where they fix on a coordinate plane.
-     */
-
-    int i;
-    for (i = 0; i < 3; i++) {
-      struct Vertex vertex = vertex_from_angle(polygon, polygon.angles[i]);
-      glVertex2f(vertex.x, vertex.y);
-    }
-
-  glEnd();
-
+/* wrapper for our library's render function */
+void
+render(SDL_Renderer* displayRenderer) 
+{
   SDL_RenderPresent(displayRenderer);
 }
 
 int
 main(int argc, char *argv[])
 {
+  int i;
+
   struct Polygon polygon = (struct Polygon) {
     .center = (struct Vertex){ 0.0f, -3.0f },
     .angles = { 0, -135, 135 },
@@ -119,6 +155,21 @@ main(int argc, char *argv[])
     .radius = 1
   };
 
+  struct Polygon * asteroids[MAX_ASTEROIDS] = { NULL };
+
+  /* allocate space for our asteroids */
+  for (i = 0; i <= MAX_ASTEROIDS; i++) {
+    asteroids[i] = (struct Polygon*) malloc(sizeof(struct Polygon));
+
+    *asteroids[i] = (struct Polygon) {
+      .center = (struct Vertex){ -0.2f, 0.0f },
+      .angles = { 0, 90, -193 },
+      .angle  = 0,
+      .radius = 1
+    };
+  }
+
+  /* Initiate our SDL library, window, and render, and declare our variables */ 
   SDL_Init(SDL_INIT_VIDEO);
   SDL_Window       *displayWindow;
   SDL_Renderer     *displayRenderer;
@@ -173,32 +224,43 @@ main(int argc, char *argv[])
       polygon.angle = 90;
 
       /* Movement up and down */
-      if (keystate[SDL_SCANCODE_W])
+      if (keystate[SDL_SCANCODE_W]) {
         polygon.center = vertex_shift(polygon, speed);
+      }
 
-      if (keystate[SDL_SCANCODE_S])
+      if (keystate[SDL_SCANCODE_S]) {
         polygon.center = vertex_shift(polygon, -speed);
+      }
 
       /* Turning left or right */
       if (keystate[SDL_SCANCODE_A]) {
         polygon.angle = 110;
         polygon.center.x -= 0.25;
       }
-        //polygon.angle = (polygon.angle + 4) % 360;
 
       if (keystate[SDL_SCANCODE_D]) {
         polygon.angle = 70;
         polygon.center.x += 0.25;
       }
-        //polygon.angle = (polygon.angle - 4) % 360;
+
+      /* set the display for drawing */
+      set_display(displayRenderer);
 
       /* Draw everything */
-      Display_Render(displayRenderer, polygon);
+      display_player(displayRenderer, polygon);
+      display_asteroids(displayRenderer, asteroids);
+
+      render(displayRenderer);
     }
 
   }
   
   SDL_Quit();
+
+  /* Free the space of our asteroids */
+  for (i = 0; i <= MAX_ASTEROIDS; i++) {
+    free(asteroids[i]);
+  }
   
   return 0;
 }
