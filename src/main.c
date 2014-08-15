@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <math.h>
+#include <time.h>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
@@ -13,6 +14,8 @@
 #define MAX_ASTEROIDS   16
 #define ASTEROID_ANGLES  4
 #define PLAYER_ANGLES    3
+
+#define ARC4RANDOM_MAX  0x100000000
 
 void
 fatal(const char *message)
@@ -140,22 +143,32 @@ construct_asteroid()
     fatal("Out of memory.");
   }
 
+
   /* define the asteroid and allocate space for the angles array */
   *p = (struct Polygon) {
-    .center = (struct Vertex){ -0.2f, 0.0f },
-    .angles = (float *) malloc(sizeof(float) * ASTEROID_ANGLES),
-    .angle  = 0,
-    .radius = 1
+    .center = (struct Vertex){ 
+      /* 
+       * Generate a random number between 0.0f and 1.0f, multiply it
+       * by 10 to get a range from 0.0f to 10.0f and then subtract 5.0f
+       * to get a final range of -5.0f to 5.0f
+       */
+      .x = ((((double)arc4random() / ARC4RANDOM_MAX) * 10.0f) - 5.0f),
+      .y = 2.0f,
+    },
+    .angle  = rand() % 91,
+    .radius = 1,
+    .angles = (float *) malloc(sizeof(float) * ASTEROID_ANGLES)
   };
 
   if (p->angles == NULL) {
     fatal("Out of memory.");
   }
 
-  p->angles[0] = 0;
-  p->angles[1] = 80;
-  p->angles[2] = 160;
-  p->angles[3] = 240;
+  /* Get a random number for each quadrant (0..90 and then add the angle) */
+  p->angles[0] = rand() % 91;
+  p->angles[1] = 90  + (rand() % 91);
+  p->angles[2] = 180 + (rand() % 91);
+  p->angles[3] = 270 + (rand() % 91);
 
   return p;
 }
@@ -199,6 +212,9 @@ render(SDL_Renderer* displayRenderer)
 int
 main(int argc, char *argv[])
 {
+  /* seed our random number generator */
+  srand(time(NULL));
+
   int i;
 
   float angles[PLAYER_ANGLES] = { 0, -135, 135 };
@@ -213,7 +229,8 @@ main(int argc, char *argv[])
   struct Polygon * asteroids[MAX_ASTEROIDS] = { NULL };
 
   /* construct all of our asteroids */
-  for (i = 0; i < MAX_ASTEROIDS; i++) {
+  //for (i = 0; i < MAX_ASTEROIDS; i++) {
+  for (i = 0; i < 1; i++) {
     asteroids[i] = construct_asteroid();
   }
 
