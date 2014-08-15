@@ -10,10 +10,16 @@
 
 #include "polygon.h"
 
-#define DIMENSION 3
-#define N_POINTS  3
+#define MAX_ASTEROIDS   16
+#define ASTEROID_ANGLES  4
+#define PLAYER_ANGLES    3
 
-#define MAX_ASTEROIDS 16
+void
+fatal(const char *message)
+{
+  fprintf(stderr, "%s\n", message);
+  exit(1);
+}
 
 void 
 Display_InitGL()
@@ -41,7 +47,7 @@ Display_InitGL()
 int 
 Display_SetViewport(int width, int height)
 {
-  /* Height / width ration */
+  /* Height / width ratio */
   GLfloat ratio;
 
   /* Protect against a divide by zero */
@@ -70,9 +76,7 @@ Display_SetViewport(int width, int height)
   return 1;
 }
 
-/*
- * Wrapper for glTranslatef
- */
+/* Wrapper for glTranslatef */
 void
 glTranslatefv(GLfloat *point) {
   glTranslatef(point[0], point[1], point[2]);
@@ -92,7 +96,7 @@ display_player(SDL_Renderer* displayRenderer,
      */
 
     int i;
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < PLAYER_ANGLES; i++) {
       struct Vertex vertex = vertex_from_angle(player, player.angles[i]);
       glVertex2f(vertex.x, vertex.y);
     }
@@ -105,12 +109,12 @@ void
 display_asteroids(SDL_Renderer* displayRenderer, 
                   struct Polygon* asteroids[MAX_ASTEROIDS])
 {
-  glBegin(GL_TRIANGLES);
+  glBegin(GL_QUADS);
     int j, i;
-    for (j = 0; j <= MAX_ASTEROIDS; j++) {
+    for (j = 0; j < MAX_ASTEROIDS; j++) {
       if (asteroids[j] == NULL) { continue; }
 
-      for (i = 0; i < 3; i++) {
+      for (i = 0; i < ASTEROID_ANGLES; i++) {
         struct Vertex vertex = vertex_from_angle(*asteroids[j], 
             asteroids[j]->angles[i]);
         glVertex2f(vertex.x, vertex.y);
@@ -118,6 +122,55 @@ display_asteroids(SDL_Renderer* displayRenderer,
     }
 
   glEnd();
+}
+
+/* create randomized asteroids to kill our player */
+struct Polygon *
+construct_asteroid() 
+{
+
+  /*
+   * TODO: Random angles and placement for our asteroids
+   */
+
+  /* allocate space for our asteroid on the heap */
+  struct Polygon *p = (struct Polygon*) malloc(sizeof(struct Polygon));
+
+  if (p == NULL) {
+    fatal("Out of memory.");
+  }
+
+  /* define the asteroid and allocate space for the angles array */
+  *p = (struct Polygon) {
+    .center = (struct Vertex){ -0.2f, 0.0f },
+    .angles = (float *) malloc(sizeof(float) * ASTEROID_ANGLES),
+    .angle  = 0,
+    .radius = 1
+  };
+
+  if (p->angles == NULL) {
+    fatal("Out of memory.");
+  }
+
+  p->angles[0] = 0;
+  p->angles[1] = 80;
+  p->angles[2] = 160;
+  p->angles[3] = 240;
+
+  return p;
+}
+
+/* Free the space of our asteroids */
+void
+deconstruct_asteroids(struct Polygon *p[])
+{
+  int i;
+  for (i = 0; i < MAX_ASTEROIDS; i++) {
+    if (p[i] == NULL) { continue; }
+
+    free(p[i]->angles);
+    free(p[i]);
+  }
 }
 
 /* setup the display to be drawn on */
@@ -148,25 +201,20 @@ main(int argc, char *argv[])
 {
   int i;
 
-  struct Polygon polygon = (struct Polygon) {
+  float angles[PLAYER_ANGLES] = { 0, -135, 135 };
+
+  struct Polygon player = (struct Polygon) {
     .center = (struct Vertex){ 0.0f, -3.0f },
-    .angles = { 0, -135, 135 },
+    .angles = angles,
     .angle  = 90,
     .radius = 1
   };
 
   struct Polygon * asteroids[MAX_ASTEROIDS] = { NULL };
 
-  /* allocate space for our asteroids */
-  for (i = 0; i <= MAX_ASTEROIDS; i++) {
-    asteroids[i] = (struct Polygon*) malloc(sizeof(struct Polygon));
-
-    *asteroids[i] = (struct Polygon) {
-      .center = (struct Vertex){ -0.2f, 0.0f },
-      .angles = { 0, 90, -193 },
-      .angle  = 0,
-      .radius = 1
-    };
+  /* construct all of our asteroids */
+  for (i = 0; i < MAX_ASTEROIDS; i++) {
+    asteroids[i] = construct_asteroid();
   }
 
   /* Initiate our SDL library, window, and render, and declare our variables */ 
@@ -221,46 +269,41 @@ main(int argc, char *argv[])
 
       const Uint8 *keystate = SDL_GetKeyboardState(NULL);
 
-      polygon.angle = 90;
+      player.angle = 90;
 
       /* Movement up and down */
       if (keystate[SDL_SCANCODE_W]) {
-        polygon.center = vertex_shift(polygon, speed);
+        player.center = vertex_shift(player, speed);
       }
 
       if (keystate[SDL_SCANCODE_S]) {
-        polygon.center = vertex_shift(polygon, -speed);
+        player.center = vertex_shift(player, -speed);
       }
 
       /* Turning left or right */
       if (keystate[SDL_SCANCODE_A]) {
-        polygon.angle = 110;
-        polygon.center.x -= 0.25;
+        player.angle = 110;
+        player.center.x -= 0.25;
       }
 
       if (keystate[SDL_SCANCODE_D]) {
-        polygon.angle = 70;
-        polygon.center.x += 0.25;
+        player.angle = 70;
+        player.center.x += 0.25;
       }
 
       /* set the display for drawing */
       set_display(displayRenderer);
 
       /* Draw everything */
-      display_player(displayRenderer, polygon);
+      display_player(displayRenderer, player);
       display_asteroids(displayRenderer, asteroids);
 
       render(displayRenderer);
     }
-
   }
   
   SDL_Quit();
+  deconstruct_asteroids(asteroids);
 
-  /* Free the space of our asteroids */
-  for (i = 0; i <= MAX_ASTEROIDS; i++) {
-    free(asteroids[i]);
-  }
-  
   return 0;
 }

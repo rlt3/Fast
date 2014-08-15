@@ -11,13 +11,9 @@
  * it rotates and moves.
  */
 
-/*
- * TODO: make the angle a pointer to handle a polygon of any number of angles 
- */
-
 struct Polygon {
   struct Vertex center;
-  float         angles[3];
+  float        *angles;
 
   int           angle;
   int           radius;
