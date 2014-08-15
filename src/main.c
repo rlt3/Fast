@@ -15,6 +15,9 @@
 #define ASTEROID_ANGLES  4
 #define PLAYER_ANGLES    3
 
+#define Y_LENGTH  4.0f
+#define X_LENGTH  7.0f
+
 #define ARC4RANDOM_MAX  0x100000000
 
 void
@@ -186,6 +189,32 @@ deconstruct_asteroids(struct Polygon *p[])
   }
 }
 
+bool
+vertex_visible(struct Vertex vertex) {
+  return (vertex.y > -Y_LENGTH &&
+          vertex.y <  Y_LENGTH &&
+          vertex.x > -X_LENGTH &&
+          vertex.x <  X_LENGTH);
+}
+
+void
+handle_asteroids(struct Polygon *asteroids[], float speed)
+{
+  int i;
+  for (i = 0; i < MAX_ASTEROIDS; i++) {
+    if (asteroids[i] == NULL) { continue; }
+
+    asteroids[i]->center.y -= speed;
+
+    /* if it ain't visible anymore, make a new one */
+    if (!vertex_visible(asteroids[i]->center)) {
+      free(asteroids[i]->angles);
+      free(asteroids[i]);
+      asteroids[i] = construct_asteroid();
+    }
+  }
+}
+
 /* setup the display to be drawn on */
 void 
 set_display(SDL_Renderer* displayRenderer)
@@ -307,6 +336,9 @@ main(int argc, char *argv[])
         player.angle = 70;
         player.center.x += 0.25;
       }
+
+      /* move the asteroids */
+      handle_asteroids(asteroids, speed);
 
       /* set the display for drawing */
       set_display(displayRenderer);
