@@ -134,11 +134,6 @@ display_asteroids(SDL_Renderer* displayRenderer,
 struct Polygon *
 construct_asteroid() 
 {
-
-  /*
-   * TODO: Random angles and placement for our asteroids
-   */
-
   /* allocate space for our asteroid on the heap */
   struct Polygon *p = (struct Polygon*) malloc(sizeof(struct Polygon));
 
@@ -156,10 +151,10 @@ construct_asteroid()
        * to get a final range of -5.0f to 5.0f
        */
       .x = ((((double)arc4random() / ARC4RANDOM_MAX) * 10.0f) - 5.0f),
-      .y = 2.0f,
+      .y = 4.0f,
     },
     .angle  = rand() % 91,
-    .radius = 1,
+    .radius = 0.5,
     .angles = (float *) malloc(sizeof(float) * ASTEROID_ANGLES)
   };
 
@@ -257,6 +252,12 @@ main(int argc, char *argv[])
 
   struct Polygon * asteroids[MAX_ASTEROIDS] = { NULL };
 
+  /*
+   *  TODO: 
+   *    - Scale our asteroid count by time
+   *    - Collision on asteroids ends game
+   */
+
   /* construct all of our asteroids */
   //for (i = 0; i < MAX_ASTEROIDS; i++) {
   for (i = 0; i < 1; i++) {
@@ -295,7 +296,7 @@ main(int argc, char *argv[])
     /* Every 10 seconds make the player faster */
     if (SDL_GetTicks() - last_speed > 10000) {
       last_speed = SDL_GetTicks();
-      speed = speed + 0.15f;
+      speed = speed + 0.1f;
     }
 
     while (SDL_PollEvent(&event)){
@@ -326,15 +327,16 @@ main(int argc, char *argv[])
         player.center = vertex_shift(player, -speed);
       }
 
-      /* Turning left or right */
+      /* Tilt the player left and move left */
       if (keystate[SDL_SCANCODE_A]) {
         player.angle = 110;
-        player.center.x -= 0.25;
+        player.center.x -= speed + 0.25;
       }
 
+      /* Tilt the player right and move right */
       if (keystate[SDL_SCANCODE_D]) {
         player.angle = 70;
-        player.center.x += 0.25;
+        player.center.x += speed + 0.25;
       }
 
       /* move the asteroids */

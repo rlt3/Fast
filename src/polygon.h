@@ -16,7 +16,7 @@ struct Polygon {
   float        *angles;
 
   int           angle;
-  int           radius;
+  float         radius;
 };
 
 struct Vertex vertex_shift(struct Polygon p, float amount);
