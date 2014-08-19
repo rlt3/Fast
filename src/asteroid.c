@@ -62,9 +62,9 @@ handle_asteroids(struct Polygon *asteroids[],
       continue;
     }
 
-    if (polygon_point_inside(player.center, *asteroids[i], MAX_ASTEROIDS)) {
-      printf("Collision!");
-    }
+    //if (polygon_point_inside(player.center, *asteroids[i], MAX_ASTEROIDS)) {
+    //  printf("Collision!");
+    //}
   }
 }
 

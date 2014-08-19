@@ -31,4 +31,7 @@ struct Vertex _v_sub(struct Vertex a, struct Vertex b);
 int           _x_product(struct Vertex a, struct Vertex b);
 int           _get_side(struct Vertex a, struct Vertex b);
 
+float         distance(struct Vertex a, struct Vertex b);
+float         triangle_area(struct Polygon polygon);
+
 #endif

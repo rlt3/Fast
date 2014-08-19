@@ -152,6 +152,8 @@ main(int argc, char *argv[])
     .radius = 1
   };
 
+  printf("area: %f\n", triangle_area(player));
+
   struct Polygon * asteroids[MAX_ASTEROIDS] = { NULL };
 
   /*
