@@ -1,31 +1,13 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
-#include <math.h>
-#include <time.h>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 #include <OpenGL/glu.h>
 
 #include "polygon.h"
+#include "asteroid.h"
 
-#define MAX_ASTEROIDS   16
-#define ASTEROID_ANGLES  4
 #define PLAYER_ANGLES    3
-
-#define Y_LENGTH  4.0f
-#define X_LENGTH  7.0f
-
-#define ARC4RANDOM_MAX  0x100000000
-
-void
-fatal(const char *message)
-{
-  fprintf(stderr, "%s\n", message);
-  exit(1);
-}
 
 void 
 Display_InitGL()
@@ -128,86 +110,6 @@ display_asteroids(SDL_Renderer* displayRenderer,
     }
 
   glEnd();
-}
-
-/* create randomized asteroids to kill our player */
-struct Polygon *
-construct_asteroid() 
-{
-  /* allocate space for our asteroid on the heap */
-  struct Polygon *p = (struct Polygon*) malloc(sizeof(struct Polygon));
-
-  if (p == NULL) {
-    fatal("Out of memory.");
-  }
-
-
-  /* define the asteroid and allocate space for the angles array */
-  *p = (struct Polygon) {
-    .center = (struct Vertex){ 
-      /* 
-       * Generate a random number between 0.0f and 1.0f, multiply it
-       * by 10 to get a range from 0.0f to 10.0f and then subtract 5.0f
-       * to get a final range of -5.0f to 5.0f
-       */
-      .x = ((((double)arc4random() / ARC4RANDOM_MAX) * 10.0f) - 5.0f),
-      .y = 4.0f,
-    },
-    .angle  = rand() % 91,
-    .radius = 0.5,
-    .angles = (float *) malloc(sizeof(float) * ASTEROID_ANGLES)
-  };
-
-  if (p->angles == NULL) {
-    fatal("Out of memory.");
-  }
-
-  /* Get a random number for each quadrant (0..90 and then add the angle) */
-  p->angles[0] = rand() % 91;
-  p->angles[1] = 90  + (rand() % 91);
-  p->angles[2] = 180 + (rand() % 91);
-  p->angles[3] = 270 + (rand() % 91);
-
-  return p;
-}
-
-/* Free the space of our asteroids */
-void
-deconstruct_asteroids(struct Polygon *p[])
-{
-  int i;
-  for (i = 0; i < MAX_ASTEROIDS; i++) {
-    if (p[i] == NULL) { continue; }
-
-    free(p[i]->angles);
-    free(p[i]);
-  }
-}
-
-bool
-vertex_visible(struct Vertex vertex) {
-  return (vertex.y > -Y_LENGTH &&
-          vertex.y <  Y_LENGTH &&
-          vertex.x > -X_LENGTH &&
-          vertex.x <  X_LENGTH);
-}
-
-void
-handle_asteroids(struct Polygon *asteroids[], float speed)
-{
-  int i;
-  for (i = 0; i < MAX_ASTEROIDS; i++) {
-    if (asteroids[i] == NULL) { continue; }
-
-    asteroids[i]->center.y -= speed;
-
-    /* if it ain't visible anymore, make a new one */
-    if (!vertex_visible(asteroids[i]->center)) {
-      free(asteroids[i]->angles);
-      free(asteroids[i]);
-      asteroids[i] = construct_asteroid();
-    }
-  }
 }
 
 /* setup the display to be drawn on */
@@ -340,7 +242,7 @@ main(int argc, char *argv[])
       }
 
       /* move the asteroids */
-      handle_asteroids(asteroids, speed);
+      handle_asteroids(asteroids, player, speed);
 
       /* set the display for drawing */
       set_display(displayRenderer);
