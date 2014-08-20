@@ -14,22 +14,14 @@
  */
 
 struct Polygon {
-  struct Vertex center;
-  float        *angles;
-  float         radius;
-  int           angle;
+  struct Vertex  center;
+  struct Vertex *vertices;
+  float          radius;
+  int            sides;
 };
 
-struct Vertex vertex_shift(struct Polygon p, float amount);
+void          update_vertices(struct Polygon *p);
 struct Vertex vertex_from_angle(struct Polygon p, float angle);
-
-bool          polygon_point_inside(struct Vertex point, 
-                                   struct Polygon polygon,
-                                   int length);
-
-struct Vertex _v_sub(struct Vertex a, struct Vertex b);
-int           _x_product(struct Vertex a, struct Vertex b);
-int           _get_side(struct Vertex a, struct Vertex b);
 
 float         distance(struct Vertex a, struct Vertex b);
 float         triangle_area(struct Polygon polygon);

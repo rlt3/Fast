@@ -64,31 +64,16 @@ Display_SetViewport(int width, int height)
   return 1;
 }
 
-/* Wrapper for glTranslatef */
-void
-glTranslatefv(GLfloat *point) {
-  glTranslatef(point[0], point[1], point[2]);
-}
-
 /* Draw the player's ship */
 void
 display_player(SDL_Renderer* displayRenderer, 
                struct Polygon player)
 {
   glBegin(GL_TRIANGLES);
-
-    /*
-     * The polygon itself holds an angle. Each vertex is at a set angle
-     * relative to the polygon. So, using some trigonometry we can use those
-     * angles to find where they fix on a coordinate plane.
-     */
-
     int i;
-    for (i = 0; i < PLAYER_ANGLES; i++) {
-      struct Vertex vertex = vertex_from_angle(player, player.angles[i]);
-      glVertex2f(vertex.x, vertex.y);
+    for (i = 0; i < player.sides; i++) {
+      glVertex2f(player.vertices[i].x, player.vertices[i].y);
     }
-
   glEnd();
 }
 
@@ -102,11 +87,11 @@ display_asteroids(SDL_Renderer* displayRenderer,
     for (j = 0; j < MAX_ASTEROIDS; j++) {
       if (asteroids[j] == NULL) { continue; }
 
-      for (i = 0; i < ASTEROID_ANGLES; i++) {
-        struct Vertex vertex = vertex_from_angle(*asteroids[j], 
-            asteroids[j]->angles[i]);
-        glVertex2f(vertex.x, vertex.y);
-      }
+      //for (i = 0; i < ASTEROID_ANGLES; i++) {
+      //  struct Vertex vertex = vertex_from_angle(*asteroids[j], 
+      //      asteroids[j]->angles[i]);
+      //  glVertex2f(vertex.x, vertex.y);
+      //}
     }
 
   glEnd();
@@ -143,18 +128,22 @@ main(int argc, char *argv[])
 
   int i;
 
-  float angles[PLAYER_ANGLES] = { 0, -135, 135 };
-
-  struct Polygon player = (struct Polygon) {
-    .center = (struct Vertex){ 0.0f, -3.0f },
-    .angles = angles,
-    .angle  = 90,
-    .radius = 1
+  struct Vertex vertices[PLAYER_ANGLES] = { 
+    (struct Vertex) { 0, 0, 135 },
+    (struct Vertex) { 0, 0, 135 },
+    (struct Vertex) { 0, 0, 135 },
   };
 
-  printf("area: %f\n", triangle_area(player));
+  struct Polygon player = (struct Polygon) {
+    .center   = (struct Vertex){ 0.0f, -3.0f },
+    .vertices = vertices,
+    .radius   = 1,
+    .sides    = PLAYER_ANGLES
+  };
 
-  struct Polygon * asteroids[MAX_ASTEROIDS] = { NULL };
+  //printf("area: %f\n", triangle_area(player));
+
+  //struct Polygon * asteroids[MAX_ASTEROIDS] = { NULL };
 
   /*
    *  TODO: 
@@ -164,9 +153,9 @@ main(int argc, char *argv[])
 
   /* construct all of our asteroids */
   //for (i = 0; i < MAX_ASTEROIDS; i++) {
-  for (i = 0; i < 1; i++) {
-    asteroids[i] = construct_asteroid();
-  }
+  //for (i = 0; i < 1; i++) {
+  //  asteroids[i] = construct_asteroid();
+  //}
 
   /* Initiate our SDL library, window, and render, and declare our variables */ 
   SDL_Init(SDL_INIT_VIDEO);
@@ -220,45 +209,47 @@ main(int argc, char *argv[])
 
       const Uint8 *keystate = SDL_GetKeyboardState(NULL);
 
-      player.angle = 90;
+      player.center.angle = 90;
 
       /* Movement up and down */
       if (keystate[SDL_SCANCODE_W]) {
-        player.center = vertex_shift(player, speed);
+        player.center = vertex_shift(player.center, speed);
       }
 
       if (keystate[SDL_SCANCODE_S]) {
-        player.center = vertex_shift(player, -speed);
+        player.center = vertex_shift(player.center, -speed);
       }
 
       /* Tilt the player left and move left */
       if (keystate[SDL_SCANCODE_A]) {
-        player.angle = 110;
+        player.center.angle = 110;
         player.center.x -= speed + 0.25;
       }
 
       /* Tilt the player right and move right */
       if (keystate[SDL_SCANCODE_D]) {
-        player.angle = 70;
+        player.center.angle = 70;
         player.center.x += speed + 0.25;
       }
 
       /* move the asteroids */
-      handle_asteroids(asteroids, player, speed);
+      //handle_asteroids(asteroids, player, speed);
+
+      update_vertices(&player);
 
       /* set the display for drawing */
       set_display(displayRenderer);
 
       /* Draw everything */
       display_player(displayRenderer, player);
-      display_asteroids(displayRenderer, asteroids);
+      //display_asteroids(displayRenderer, asteroids);
 
       render(displayRenderer);
     }
   }
   
   SDL_Quit();
-  deconstruct_asteroids(asteroids);
+  //deconstruct_asteroids(asteroids);
 
   return 0;
 }
