@@ -14,8 +14,8 @@ struct Vertex {
 };
 
 struct Vertex vertex_shift(struct Vertex vertex, float amount);
-struct Vertex create_vertex(float x, float y, float radius, float angle);
-
+struct Vertex create_vertex(float x, float y, float radius, 
+                            float offset, float angle);
 bool          vertex_visible(struct Vertex vertex);
 
 #endif

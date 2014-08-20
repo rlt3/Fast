@@ -14,7 +14,7 @@ update_vertices(struct Polygon *p)
 struct Vertex
 vertex_from_angle(struct Polygon p, float angle)
 {
-  return create_vertex(p.center.x, p.center.y, p.radius, (p.center.angle + angle));
+  return create_vertex(p.center.x, p.center.y, p.radius, p.center.angle, angle);
 }
 
 /* the distance formula */

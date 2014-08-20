@@ -70,6 +70,9 @@ display_player(SDL_Renderer* displayRenderer,
                struct Polygon player)
 {
   glBegin(GL_TRIANGLES);
+    //glVertex2f(-0.707107f, -3.707107f);
+    //glVertex2f(0.707107f, -3.707107f);
+    //glVertex2f(0.707107f, -2.292893f);
     int i;
     for (i = 0; i < player.sides; i++) {
       glVertex2f(player.vertices[i].x, player.vertices[i].y);
@@ -85,7 +88,7 @@ display_asteroids(SDL_Renderer* displayRenderer,
   glBegin(GL_QUADS);
     int j, i;
     for (j = 0; j < MAX_ASTEROIDS; j++) {
-      if (asteroids[j] == NULL) { continue; }
+    
 
       //for (i = 0; i < ASTEROID_ANGLES; i++) {
       //  struct Vertex vertex = vertex_from_angle(*asteroids[j], 
@@ -129,13 +132,13 @@ main(int argc, char *argv[])
   int i;
 
   struct Vertex vertices[PLAYER_ANGLES] = { 
-    (struct Vertex) { 0, 0, 135 },
-    (struct Vertex) { 0, 0, 135 },
-    (struct Vertex) { 0, 0, 135 },
+    (struct Vertex) { 0, 0,    0 },
+    (struct Vertex) { 0, 0, -135 },
+    (struct Vertex) { 0, 0,  135 },
   };
 
   struct Polygon player = (struct Polygon) {
-    .center   = (struct Vertex){ 0.0f, -3.0f },
+    .center   = (struct Vertex){ 0.0f, -3.0f, 90 },
     .vertices = vertices,
     .radius   = 1,
     .sides    = PLAYER_ANGLES
@@ -234,8 +237,12 @@ main(int argc, char *argv[])
 
       /* move the asteroids */
       //handle_asteroids(asteroids, player, speed);
-
+      
       update_vertices(&player);
+
+  //printf("1: (%f, %f)\n", player.vertices[0].x, player.vertices[0].y);
+  //printf("2: (%f, %f)\n", player.vertices[1].x, player.vertices[1].y);
+  //printf("3: (%f, %f)\n", player.vertices[2].x, player.vertices[2].y);
 
       /* set the display for drawing */
       set_display(displayRenderer);

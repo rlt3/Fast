@@ -3,15 +3,15 @@
 struct Vertex
 vertex_shift(struct Vertex vertex, float amount)
 {
-  return create_vertex(vertex.x, vertex.y, amount, vertex.angle);
+  return create_vertex(vertex.x, vertex.y, amount, 0, vertex.angle);
 }
 
 struct Vertex
-create_vertex(float x, float y, float radius, float angle)
+create_vertex(float x, float y, float radius, float offset, float angle)
 {
   return (struct Vertex) {
-    .x = (x + (radius * cos(angle * (M_PI/180)))),
-    .y = (y + (radius * sin(angle * (M_PI/180)))),
+    .x = (x + (radius * cos((angle + offset) * (M_PI/180)))),
+    .y = (y + (radius * sin((angle + offset) * (M_PI/180)))),
     .angle = angle
   };
 }
