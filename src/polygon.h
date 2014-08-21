@@ -24,6 +24,7 @@ void          update_vertices(struct Polygon *p);
 struct Vertex vertex_from_angle(struct Polygon p, float angle);
 
 float         distance(struct Vertex a, struct Vertex b);
-float         triangle_area(struct Polygon polygon);
+float         triangle_area(struct Vertex x, struct Vertex y, struct Vertex z);
+float         polygon_area(struct Polygon p);
 
 #endif

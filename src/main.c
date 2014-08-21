@@ -70,9 +70,6 @@ display_player(SDL_Renderer* displayRenderer,
                struct Polygon player)
 {
   glBegin(GL_TRIANGLES);
-    //glVertex2f(-0.707107f, -3.707107f);
-    //glVertex2f(0.707107f, -3.707107f);
-    //glVertex2f(0.707107f, -2.292893f);
     int i;
     for (i = 0; i < player.sides; i++) {
       glVertex2f(player.vertices[i].x, player.vertices[i].y);
@@ -88,13 +85,11 @@ display_asteroids(SDL_Renderer* displayRenderer,
   glBegin(GL_QUADS);
     int j, i;
     for (j = 0; j < MAX_ASTEROIDS; j++) {
-    
+      if (asteroids[j] == NULL) { continue; }
 
-      //for (i = 0; i < ASTEROID_ANGLES; i++) {
-      //  struct Vertex vertex = vertex_from_angle(*asteroids[j], 
-      //      asteroids[j]->angles[i]);
-      //  glVertex2f(vertex.x, vertex.y);
-      //}
+      for (i = 0; i < ASTEROID_ANGLES; i++) {
+        glVertex2f(asteroids[j]->vertices[i].x, asteroids[j]->vertices[i].y);
+      }
     }
 
   glEnd();
@@ -144,9 +139,7 @@ main(int argc, char *argv[])
     .sides    = PLAYER_ANGLES
   };
 
-  //printf("area: %f\n", triangle_area(player));
-
-  //struct Polygon * asteroids[MAX_ASTEROIDS] = { NULL };
+  struct Polygon * asteroids[MAX_ASTEROIDS] = { NULL };
 
   /*
    *  TODO: 
@@ -156,9 +149,9 @@ main(int argc, char *argv[])
 
   /* construct all of our asteroids */
   //for (i = 0; i < MAX_ASTEROIDS; i++) {
-  //for (i = 0; i < 1; i++) {
-  //  asteroids[i] = construct_asteroid();
-  //}
+  for (i = 0; i < 1; i++) {
+    asteroids[i] = construct_asteroid();
+  }
 
   /* Initiate our SDL library, window, and render, and declare our variables */ 
   SDL_Init(SDL_INIT_VIDEO);
@@ -235,28 +228,23 @@ main(int argc, char *argv[])
         player.center.x += speed + 0.25;
       }
 
-      /* move the asteroids */
-      //handle_asteroids(asteroids, player, speed);
-      
+      handle_asteroids(asteroids, player, speed);
       update_vertices(&player);
 
-  //printf("1: (%f, %f)\n", player.vertices[0].x, player.vertices[0].y);
-  //printf("2: (%f, %f)\n", player.vertices[1].x, player.vertices[1].y);
-  //printf("3: (%f, %f)\n", player.vertices[2].x, player.vertices[2].y);
-
-      /* set the display for drawing */
       set_display(displayRenderer);
 
-      /* Draw everything */
       display_player(displayRenderer, player);
-      //display_asteroids(displayRenderer, asteroids);
+      display_asteroids(displayRenderer, asteroids);
 
       render(displayRenderer);
     }
   }
+
+  printf("area: %f\n\n", polygon_area(player));
+  printf("area: %f\n",   polygon_area(*asteroids[0]));
   
   SDL_Quit();
-  //deconstruct_asteroids(asteroids);
+  deconstruct_asteroids(asteroids);
 
   return 0;
 }

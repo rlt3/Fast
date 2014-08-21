@@ -21,28 +21,40 @@ vertex_from_angle(struct Polygon p, float angle)
 float
 distance(struct Vertex a, struct Vertex b)
 {
-//  float dist = sqrt(pow((b.x - a.x), 2) + pow((b.y - a.y), 2));
-//  printf("(%f, %f) -> (%f, %f) => %f\n", a.x, a.y, b.x, b.y, dist);
-//  return dist;
   return sqrt(pow((b.x - a.x), 2) + pow((b.y - a.y), 2));
 }
 
 float
-triangle_area(struct Polygon polygon)
+triangle_area(struct Vertex x, struct Vertex y, struct Vertex z)
 {
-//  struct Vertex vertices[3];
-//
-//  int i;
-//  for (i = 0; i < 3; i++) {
-//    vertices[i] = vertex_from_angle(polygon, polygon.angles[i]);
-//  }
-//
-//  float a = distance(vertices[0], vertices[1]);
-//  float b = distance(vertices[1], vertices[2]);
-//  float c = distance(vertices[2], vertices[0]);
-//
-//  float s = (a + b + c) / 2;
-//
-//  return sqrt(s * (s - a) * (s - b) * (s - c));
-    return 2.5;
+  float a = distance(x, y);
+  float b = distance(y, z);
+  float c = distance(z, x);
+
+  float s = (a + b + c) / 2;
+
+  return sqrt(s * (s - a) * (s - b) * (s - c));
+}
+
+/*
+ * Every polygon is comprised of triangles. So, split the polygon into many
+ * triangles and just count the areas of each triangle to get the area of
+ * that polygon.
+ */
+float
+polygon_area(struct Polygon p)
+{
+  float total_area    = 0.0f;
+  int   num_triangles = p.sides - 2;
+  int   loops         = 0;
+  int   i;
+
+  for (i = 0; loops < num_triangles; i = i + 2) {
+    total_area += triangle_area(p.vertices[i], 
+                                p.vertices[(i + 1) % p.sides], 
+                                p.vertices[(i + 2) % p.sides]);
+    loops++;
+  }
+
+  return total_area;
 }
