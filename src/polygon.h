@@ -27,4 +27,6 @@ float         distance(struct Vertex a, struct Vertex b);
 float         triangle_area(struct Vertex x, struct Vertex y, struct Vertex z);
 float         polygon_area(struct Polygon p);
 
+bool          point_inside_polygon(struct Vertex origin, struct Polygon p);
+
 #endif

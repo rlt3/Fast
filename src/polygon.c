@@ -58,3 +58,33 @@ polygon_area(struct Polygon p)
 
   return total_area;
 }
+
+/*
+ * Given a point, create triangles using that point and each side of the polygon
+ * as the base. If the total area of these triangles equal the area of the 
+ * polygon then that point is inside the polygon.
+ */
+bool
+point_inside_polygon(struct Vertex origin, struct Polygon p)
+{
+  float total_area    = 0.0f;
+  float area          = polygon_area(p);
+  
+  int   num_triangles = p.sides;
+  int   i;
+
+  /* accepted variance for floating point comparison */
+  float epsilon       = 0.00001;
+
+  /* total the area of the sub-triangles created by the origin point */
+  for (i = 0; i < num_triangles; i++) {
+    total_area += triangle_area(origin, 
+                                p.vertices[i],
+                                p.vertices[(i + 1) % p.sides]);
+  }
+
+  printf("area:  %lf\n", area);
+  printf("total: %lf\n", total_area);
+
+  return (fabs(total_area - area) < epsilon);
+}
