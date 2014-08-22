@@ -243,11 +243,11 @@ main(int argc, char *argv[])
   //printf("area: %f\n\n", polygon_area(player));
   //printf("area: %f\n",   polygon_area(*asteroids[0]));
 
-  printf("asteroid center inside? %s\n", 
-    (point_inside_polygon(asteroids[0]->center, *asteroids[0]) ? "true" : "false"));
+  //printf("asteroid center inside? %s\n", 
+  //  (point_inside_polygon(asteroids[0]->center, *asteroids[0]) ? "true" : "false"));
 
-  printf("player center inside? %s\n", 
-    (point_inside_polygon(player.center, *asteroids[0]) ? "true" : "false"));
+  //printf("player center inside? %s\n", 
+  //  (point_inside_polygon(player.center, *asteroids[0]) ? "true" : "false"));
   
   SDL_Quit();
   deconstruct_asteroids(asteroids);

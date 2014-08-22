@@ -28,5 +28,7 @@ float         triangle_area(struct Vertex x, struct Vertex y, struct Vertex z);
 float         polygon_area(struct Polygon p);
 
 bool          point_inside_polygon(struct Vertex origin, struct Polygon p);
+bool          triangle_intersects_polygon(struct Polygon triangle, 
+                                          struct Polygon polygon);
 
 #endif

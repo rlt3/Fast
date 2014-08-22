@@ -24,6 +24,16 @@ distance(struct Vertex a, struct Vertex b)
   return sqrt(pow((b.x - a.x), 2) + pow((b.y - a.y), 2));
 }
 
+/* the midpoint formula */
+struct Vertex
+midpoint(struct Vertex a, struct Vertex b)
+{
+  return (struct Vertex) {
+    .x = ((a.x + b.x) / 2),
+    .y = ((a.y + b.y) / 2),
+  };
+}
+
 float
 triangle_area(struct Vertex x, struct Vertex y, struct Vertex z)
 {
@@ -83,8 +93,36 @@ point_inside_polygon(struct Vertex origin, struct Polygon p)
                                 p.vertices[(i + 1) % p.sides]);
   }
 
-  printf("area:  %lf\n", area);
-  printf("total: %lf\n", total_area);
+  //printf("area:  %lf\n", area);
+  //printf("total: %lf\n", total_area);
 
   return (fabs(total_area - area) < epsilon);
+}
+
+/*
+ * Test the three main points plus the midpoints of the triangle for collision 
+ */
+bool
+triangle_intersects_polygon(struct Polygon triangle, struct Polygon polygon)
+{
+  struct Vertex points[triangle.sides * 2];
+
+  /* Gather all of our test points at once */
+  int i;
+  for (i = 0; i < triangle.sides; i++) {
+    points[i]     = triangle.vertices[i];
+    points[i + 1] = midpoint(triangle.vertices[i], 
+                             triangle.vertices[(i + 1) % triangle.sides]);
+  }
+
+  bool intersects = false;
+
+  for (i = 0; i < (triangle.sides * 2); i++) {
+    if (point_inside_polygon(points[i], polygon)) {
+      intersects = true;
+      break;
+    }
+  }
+
+  return intersects;
 }

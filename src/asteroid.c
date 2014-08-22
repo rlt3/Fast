@@ -69,9 +69,9 @@ handle_asteroids(struct Polygon *asteroids[],
 
     update_vertices(asteroids[i]);
 
-    //if (polygon_point_inside(player.center, *asteroids[i], MAX_ASTEROIDS)) {
-    //  printf("Collision!");
-    //}
+    if (triangle_intersects_polygon(player, *asteroids[i])) {
+      printf("Collision!\n");
+    }
   }
 }
 
