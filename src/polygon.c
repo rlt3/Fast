@@ -93,9 +93,6 @@ point_inside_polygon(struct Vertex origin, struct Polygon p)
                                 p.vertices[(i + 1) % p.sides]);
   }
 
-  //printf("area:  %lf\n", area);
-  //printf("total: %lf\n", total_area);
-
   return (fabs(total_area - area) < epsilon);
 }
 

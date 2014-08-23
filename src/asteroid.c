@@ -64,14 +64,10 @@ handle_asteroids(struct Polygon *asteroids[],
     if (!vertex_visible(asteroids[i]->center)) {
       deconstruct_asteroid(asteroids[i]);
       asteroids[i] = construct_asteroid();
-      continue;
     }
 
+    /* update the vertices for each (even new) asteroids so collision works */
     update_vertices(asteroids[i]);
-
-    if (triangle_intersects_polygon(player, *asteroids[i])) {
-      printf("Collision!\n");
-    }
   }
 }
 

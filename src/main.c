@@ -77,6 +77,22 @@ display_player(SDL_Renderer* displayRenderer,
   glEnd();
 }
 
+void
+handle_collision(struct Polygon *asteroids[], 
+                 struct Polygon  player,
+                 bool           *game)
+{
+  int i;
+  for (i = 0; i < MAX_ASTEROIDS; i++) {
+    if (asteroids[i] == NULL) { continue; }
+
+    if (triangle_intersects_polygon(player, *asteroids[i])) {
+      printf("Collision!\n");
+      *game = false;
+    }
+  }
+}
+
 /* Draw our asteroids */
 void
 display_asteroids(SDL_Renderer* displayRenderer, 
@@ -144,7 +160,7 @@ main(int argc, char *argv[])
   /*
    *  TODO: 
    *    - Scale our asteroid count by time
-   *    - Collision on asteroids ends game
+   *    + Collision on asteroids ends game
    */
 
   /* construct all of our asteroids */
@@ -231,6 +247,8 @@ main(int argc, char *argv[])
       handle_asteroids(asteroids, player, speed);
       update_vertices(&player);
 
+      handle_collision(asteroids, player, &game);
+
       set_display(displayRenderer);
 
       display_player(displayRenderer, player);
@@ -239,15 +257,6 @@ main(int argc, char *argv[])
       render(displayRenderer);
     }
   }
-
-  //printf("area: %f\n\n", polygon_area(player));
-  //printf("area: %f\n",   polygon_area(*asteroids[0]));
-
-  //printf("asteroid center inside? %s\n", 
-  //  (point_inside_polygon(asteroids[0]->center, *asteroids[0]) ? "true" : "false"));
-
-  //printf("player center inside? %s\n", 
-  //  (point_inside_polygon(player.center, *asteroids[0]) ? "true" : "false"));
   
   SDL_Quit();
   deconstruct_asteroids(asteroids);
