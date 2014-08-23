@@ -18,7 +18,7 @@ construct_asteroid()
        * by 10 to get a range from 0.0f to 10.0f and then subtract 5.0f
        * to get a final range of -5.0f to 5.0f
        */
-      .x     = ((((double)arc4random() / ARC4RANDOM_MAX) * 10.0f) - 5.0f),
+      .x     = ((drand48() * 10.0f) - 5.0f),
       .y     = 4.0f,
       .angle = rand() % 91,
     },

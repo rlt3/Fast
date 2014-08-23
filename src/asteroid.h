@@ -4,7 +4,6 @@
 #include "polygon.h"
 
 /* defines max random number for generating 0.0 to 1.0 */
-#define ARC4RANDOM_MAX   0x100000000
 #define MAX_ASTEROIDS    16
 #define ASTEROID_ANGLES  4
 

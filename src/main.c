@@ -139,6 +139,7 @@ main(int argc, char *argv[])
 {
   /* seed our random number generator */
   srand(time(NULL));
+  srand48(time(NULL));
 
   int i;
 
