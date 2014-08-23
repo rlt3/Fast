@@ -116,6 +116,14 @@ triangle_intersects_polygon(struct Polygon triangle, struct Polygon polygon)
 
   for (i = 0; i < (triangle.sides * 2); i++) {
     if (point_inside_polygon(points[i], polygon)) {
+      printf("point: (%f, %f)\n", points[i].x, points[i].y);
+
+      printf("point: (%f, %f), (%f, %f), (%f, %f), (%f, %f)\n", 
+          polygon.vertices[0].x, polygon.vertices[0].y,
+          polygon.vertices[1].x, polygon.vertices[1].y,
+          polygon.vertices[2].x, polygon.vertices[2].y,
+          polygon.vertices[3].x, polygon.vertices[3].y);
+
       intersects = true;
       break;
     }

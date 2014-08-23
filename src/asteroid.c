@@ -16,7 +16,7 @@ construct_asteroid()
       /* 
        * Generate a random number between 0.0f and 1.0f, multiply it
        * by 10 to get a range from 0.0f to 10.0f and then subtract 5.0f
-       * to get a final range of -5.0f to 5.0f
+       * to get a final range of -5.0f to 5.0f -- the width of the screen
        */
       .x     = ((drand48() * 10.0f) - 5.0f),
       .y     = 4.0f,
@@ -33,7 +33,7 @@ construct_asteroid()
     exit(1);
   }
 
-  /* handle any number sided polygons by splitting 360 degrees among the sides */
+  /* handle any polygon by splitting 360 degrees among the sides */
   int angle_portion = 360 / p->sides;
 
   /* make our asteroids random by generating an angle for each side */
@@ -52,11 +52,17 @@ construct_asteroid()
 void
 handle_asteroids(struct Polygon *asteroids[], 
                  struct Polygon player, 
-                 float speed)
+                 int            level)
 {
   int i;
-  for (i = 0; i < MAX_ASTEROIDS; i++) {
-    if (asteroids[i] == NULL) { continue; }
+  float speed = (float)level / 10;
+
+  for (i = 0; i < level; i++) {
+
+    /* create asteroids -- one for each level */
+    if (asteroids[i] == NULL) { 
+      asteroids[i] = construct_asteroid();
+    }
 
     asteroids[i]->center.y -= speed;
 
@@ -66,7 +72,6 @@ handle_asteroids(struct Polygon *asteroids[],
       asteroids[i] = construct_asteroid();
     }
 
-    /* update the vertices for each (even new) asteroids so collision works */
     update_vertices(asteroids[i]);
   }
 }

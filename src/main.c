@@ -158,18 +158,6 @@ main(int argc, char *argv[])
 
   struct Polygon * asteroids[MAX_ASTEROIDS] = { NULL };
 
-  /*
-   *  TODO: 
-   *    - Scale our asteroid count by time
-   *    + Collision on asteroids ends game
-   */
-
-  /* construct all of our asteroids */
-  //for (i = 0; i < MAX_ASTEROIDS; i++) {
-  for (i = 0; i < 1; i++) {
-    asteroids[i] = construct_asteroid();
-  }
-
   /* Initiate our SDL library, window, and render, and declare our variables */ 
   SDL_Init(SDL_INIT_VIDEO);
   SDL_Window       *displayWindow;
@@ -193,6 +181,7 @@ main(int argc, char *argv[])
 
   bool   game  = true;
   float  speed = 0.1f;
+  int    level = 1;
 
   Uint32 last_time  = SDL_GetTicks();
   Uint32 last_speed = last_time;
@@ -203,6 +192,7 @@ main(int argc, char *argv[])
     if (SDL_GetTicks() - last_speed > 10000) {
       last_speed = SDL_GetTicks();
       speed = speed + 0.1f;
+      level++;
     }
 
     while (SDL_PollEvent(&event)){
@@ -245,7 +235,7 @@ main(int argc, char *argv[])
         player.center.x += speed + 0.25;
       }
 
-      handle_asteroids(asteroids, player, speed);
+      handle_asteroids(asteroids, player, level);
       update_vertices(&player);
 
       handle_collision(asteroids, player, &game);
