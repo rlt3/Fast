@@ -7,13 +7,13 @@ SRCDIR     := src
 SOURCES    := src/main.c src/vertex.c src/polygon.c src/asteroid.c
 
 OBJDIR     := obj
-OBJECTS    := ${SOURCES:${SRCDIR}/%.cpp=${OBJDIR}/%.o}
+OBJECTS    := ${SOURCES:${SRCDIR}/%.c=${OBJDIR}/%.o}
 
 EXECUTABLE := fast
 
 all: ${SOURCES} ${EXECUTABLE}
 
-${OBJECTS}: ${OBJDIR}/%.o : ${SRCDIR}/%.cpp
+${OBJECTS}: ${OBJDIR}/%.o : ${SRCDIR}/%.c
 	$(CC) -c $< -o $@ ${LIBRARIES}
 
 ${EXECUTABLE}: ${OBJECTS}
