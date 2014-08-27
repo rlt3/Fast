@@ -102,28 +102,25 @@ point_inside_polygon(struct Vertex origin, struct Polygon p)
 bool
 triangle_intersects_polygon(struct Polygon triangle, struct Polygon polygon)
 {
-  struct Vertex points[triangle.sides * 2];
+  int num_points = triangle.sides * 2;
+
+  struct Vertex points[num_points];
 
   /* Gather all of our test points at once */
-  int i;
-  for (i = 0; i < triangle.sides; i++) {
-    points[i]     = triangle.vertices[i];
-    points[i + 1] = midpoint(triangle.vertices[i], 
-                             triangle.vertices[(i + 1) % triangle.sides]);
+  int i, x;
+  for (i = 0; i < num_points; i = i + 2) {
+    /* Our vertices are half the number of points, so divide and subtract */
+    x = i - (i / 2);
+
+    points[i]     = triangle.vertices[x];
+    points[i + 1] = midpoint(triangle.vertices[x], 
+                             triangle.vertices[(x + 1) % triangle.sides]);
   }
 
   bool intersects = false;
 
   for (i = 0; i < (triangle.sides * 2); i++) {
     if (point_inside_polygon(points[i], polygon)) {
-      printf("point: (%f, %f)\n", points[i].x, points[i].y);
-
-      printf("point: (%f, %f), (%f, %f), (%f, %f), (%f, %f)\n", 
-          polygon.vertices[0].x, polygon.vertices[0].y,
-          polygon.vertices[1].x, polygon.vertices[1].y,
-          polygon.vertices[2].x, polygon.vertices[2].y,
-          polygon.vertices[3].x, polygon.vertices[3].y);
-
       intersects = true;
       break;
     }
