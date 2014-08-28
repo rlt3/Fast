@@ -54,11 +54,11 @@ handle_asteroids(struct Polygon *asteroids[],
                  struct Polygon player, 
                  int            level)
 {
-  int i;
+  int   i, j;
+  bool  visible;
   float speed = (float)level / 10;
 
   for (i = 0; i < level; i++) {
-
     /* create asteroids -- one for each level */
     if (asteroids[i] == NULL) { 
       asteroids[i] = construct_asteroid();
@@ -66,8 +66,17 @@ handle_asteroids(struct Polygon *asteroids[],
 
     asteroids[i]->center.y -= speed;
 
+    /* check for visibility at all points */
+    visible = false;
+    for (j = 0; j < asteroids[i]->sides; j++) {
+      if (vertex_visible(asteroids[i]->vertices[j])) {
+        visible = true;
+        break;
+      }
+    }
+    
     /* if it ain't visible anymore, make a new one */
-    if (!vertex_visible(asteroids[i]->center)) {
+    if (!visible) {
       deconstruct_asteroid(asteroids[i]);
       asteroids[i] = construct_asteroid();
     }
