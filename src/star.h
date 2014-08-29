@@ -11,6 +11,8 @@
 
 struct Polygon * construct_star();
 void             construct_all_stars(struct Polygon *stars[]);
+void             handle_stars(struct Polygon *asteroids[], 
+                              int            level);
 
 void             deconstruct_stars(struct Polygon *p[]);
 void             deconstruct_star(struct Polygon *p);

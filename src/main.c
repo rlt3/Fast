@@ -192,6 +192,12 @@ main(int argc, char *argv[])
 
   while (game) {
 
+    /*
+     * TODO:
+     *  Gradually make the speed of the game increase instead of just
+     *  incrementing it. It is too noticeable.
+     */
+
     /* Every 10 seconds make the player faster */
     if (SDL_GetTicks() - last_speed > 10000) {
       last_speed = SDL_GetTicks();
@@ -239,7 +245,8 @@ main(int argc, char *argv[])
         player.center.x += speed + 0.25;
       }
 
-      handle_asteroids(asteroids, player, level);
+      handle_asteroids(asteroids, level);
+      handle_stars(stars, level);
       update_vertices(&player);
 
       handle_collision(asteroids, player, &game);

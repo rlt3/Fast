@@ -20,7 +20,7 @@ construct_star()
     .center = (struct Vertex){ 
       /* Random point on the screen, facing up */
       .x     = ((drand48() * 10.0f) - 5.0f),
-      .y     = ((drand48() *  8.0f) - 4.0f),
+      .y     = ((drand48() *  9.0f) - 4.5f),
       .angle = 0,
     },
     .radius = 0.05,
@@ -49,6 +49,35 @@ construct_star()
 void
 handle_stars(struct Polygon *stars[], int level) 
 {
+  int   i, j;
+  bool  visible;
+  float speed = (float)level / 30;
+  
+  for (i = 0; i < MAX_STARS; i++) {
+    if (stars[i] == NULL) {
+      stars[i] = construct_star();
+    }
+
+    /* check for visibility at all points */
+    visible = false;
+    for (j = 0; j < stars[i]->sides; j++) {
+      if (vertex_visible(stars[i]->vertices[j])) {
+        visible = true;
+        break;
+      }
+    }
+    
+    /* if it ain't visible anymore, make a new one */
+    if (!visible) {
+      stars[i]->center.y = -stars[i]->center.y;
+      //deconstruct_star(stars[i]);
+      //stars[i] = construct_star();
+    }
+
+    stars[i]->center.y -= speed;
+
+    update_vertices(stars[i]);
+  }
 }
 
 void 

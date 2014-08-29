@@ -51,7 +51,6 @@ construct_asteroid()
 
 void
 handle_asteroids(struct Polygon *asteroids[], 
-                 struct Polygon player, 
                  int            level)
 {
   int   i, j;

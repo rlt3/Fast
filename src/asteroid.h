@@ -11,7 +11,6 @@
 
 struct Polygon * construct_asteroid();
 void             handle_asteroids(struct Polygon *asteroids[], 
-                                  struct Polygon player, 
                                   int            level);
 
 void             deconstruct_asteroids(struct Polygon *p[]);
