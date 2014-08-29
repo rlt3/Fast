@@ -128,3 +128,40 @@ triangle_intersects_polygon(struct Polygon triangle, struct Polygon polygon)
 
   return intersects;
 }
+
+bool
+polygon_visible(struct Polygon p)
+{
+  bool visible = false;
+  int i;
+  for (i = 0; i < p.sides; i++) {
+    if (vertex_visible(p.vertices[i])) {
+      visible = true;
+      break;
+    }
+  }
+  return visible;
+}
+
+bool
+below_screen(struct Polygon p)
+{
+  return (!polygon_visible(p) && p.center.y < -Y_LENGTH);
+}
+
+void
+deconstruct_polygon_array(struct Polygon *p[], int max)
+{
+  int i;
+  for (i = 0; i < max; i++) {
+    if (p[i] == NULL) { continue; }
+    deconstruct_polygon(p[i]);
+  }
+}
+
+void
+deconstruct_polygon(struct Polygon *p)
+{
+  free(p->vertices);
+  free(p);
+}

@@ -2,7 +2,6 @@
 #define FAST_ASTEROID_H
 
 #include <time.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include "polygon.h"
 
@@ -11,9 +10,6 @@
 
 struct Polygon * construct_asteroid();
 void             handle_asteroids(struct Polygon *asteroids[], 
-                                  int            level);
-
-void             deconstruct_asteroids(struct Polygon *p[]);
-void             deconstruct_asteroid(struct Polygon *p);
+                                  float          speed);
 
 #endif

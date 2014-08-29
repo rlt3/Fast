@@ -1,11 +1,5 @@
 #include "star.h"
 
-/*
- * TODO:
- *  Refactor asteroids/stars to use the same functions since they are pretty
- *  much the same in construction/deconstruction.
- */
-
 struct Polygon *
 construct_star()
 {
@@ -23,7 +17,7 @@ construct_star()
       .y     = ((drand48() *  9.0f) - 4.5f),
       .angle = 0,
     },
-    .radius = 0.05,
+    .radius = 0.025,
     .sides  = STAR_ANGLES
   };
 
@@ -47,31 +41,24 @@ construct_star()
 }
 
 void
-handle_stars(struct Polygon *stars[], int level) 
+handle_stars(struct Polygon *stars[], float speed)
 {
-  int   i, j;
-  bool  visible;
-  float speed = (float)level / 30;
+  int i;
+
+  /* move slower than asteroids to simluate a parallax effect */
+  speed = speed / 3.0f;
   
   for (i = 0; i < MAX_STARS; i++) {
     if (stars[i] == NULL) {
       stars[i] = construct_star();
     }
 
-    /* check for visibility at all points */
-    visible = false;
-    for (j = 0; j < stars[i]->sides; j++) {
-      if (vertex_visible(stars[i]->vertices[j])) {
-        visible = true;
-        break;
-      }
-    }
-    
-    /* if it ain't visible anymore, make a new one */
-    if (!visible) {
-      stars[i]->center.y = -stars[i]->center.y;
-      //deconstruct_star(stars[i]);
-      //stars[i] = construct_star();
+    /* if it ain't visible anymore, loop it back to the top */
+    if (below_screen(*stars[i])) {
+      //stars[i]->center.y = -stars[i]->center.y;
+      deconstruct_polygon(stars[i]);
+      stars[i] = construct_star();
+      stars[i]->center.y = 5.0f;
     }
 
     stars[i]->center.y -= speed;
@@ -88,20 +75,4 @@ construct_all_stars(struct Polygon *stars[])
     stars[i] = construct_star();
     update_vertices(stars[i]);
   }
-}
-void
-deconstruct_stars(struct Polygon *p[])
-{
-  int i;
-  for (i = 0; i < MAX_STARS; i++) {
-    if (p[i] == NULL) { continue; }
-    deconstruct_star(p[i]);
-  }
-}
-
-void
-deconstruct_star(struct Polygon *p)
-{
-  free(p->vertices);
-  free(p);
 }

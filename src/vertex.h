@@ -1,7 +1,7 @@
 #ifndef FAST_VERTEX_H
 #define FAST_VERTEX_H
 
-#define Y_LENGTH  4.0f
+#define Y_LENGTH  5.0f
 #define X_LENGTH  7.0f
 
 #include <stdbool.h>

@@ -1,11 +1,8 @@
 #ifndef FAST_POLYGON_H
 #define FAST_POLYGON_H
 
+#include <stdlib.h>
 #include "vertex.h"
-
-#define RIGHT         1
-#define LEFT         -1
-#define NONE          0
 
 /*
  * All vertices have an angle that is relative to the center.
@@ -30,5 +27,11 @@ float         polygon_area(struct Polygon p);
 bool          point_inside_polygon(struct Vertex origin, struct Polygon p);
 bool          triangle_intersects_polygon(struct Polygon triangle, 
                                           struct Polygon polygon);
+
+bool          polygon_visible(struct Polygon p);
+bool          below_screen(struct Polygon p);
+
+void          deconstruct_polygon_array(struct Polygon *p[], int max);
+void          deconstruct_polygon(struct Polygon *p);
 
 #endif

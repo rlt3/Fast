@@ -184,8 +184,7 @@ main(int argc, char *argv[])
   Display_SetViewport(800, 600);
 
   bool   game  = true;
-  float  speed = 0.1f;
-  int    level = 1;
+  float  speed = 0.01f;
 
   Uint32 last_time  = SDL_GetTicks();
   Uint32 last_speed = last_time;
@@ -199,10 +198,9 @@ main(int argc, char *argv[])
      */
 
     /* Every 10 seconds make the player faster */
-    if (SDL_GetTicks() - last_speed > 10000) {
+    if (SDL_GetTicks() - last_speed > 1000) {
       last_speed = SDL_GetTicks();
-      speed = speed + 0.1f;
-      level++;
+      speed = speed + 0.01f;
     }
 
     while (SDL_PollEvent(&event)){
@@ -226,11 +224,11 @@ main(int argc, char *argv[])
 
       /* Movement up and down */
       if (keystate[SDL_SCANCODE_W]) {
-        player.center = vertex_shift(player.center, speed);
+        player.center = vertex_shift(player.center, 0.1f);
       }
 
       if (keystate[SDL_SCANCODE_S]) {
-        player.center = vertex_shift(player.center, -speed);
+        player.center = vertex_shift(player.center, -0.1f);
       }
 
       /* Tilt the player left and move left */
@@ -245,8 +243,8 @@ main(int argc, char *argv[])
         player.center.x += speed + 0.25;
       }
 
-      handle_asteroids(asteroids, level);
-      handle_stars(stars, level);
+      handle_asteroids(asteroids, speed);
+      handle_stars(stars, speed);
       update_vertices(&player);
 
       handle_collision(asteroids, player, &game);
@@ -262,8 +260,8 @@ main(int argc, char *argv[])
   }
   
   SDL_Quit();
-  deconstruct_asteroids(asteroids);
-  deconstruct_stars(stars);
+  deconstruct_polygon_array(asteroids, MAX_ASTEROIDS);
+  deconstruct_polygon_array(stars,     MAX_STARS);
 
   return 0;
 }

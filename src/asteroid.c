@@ -19,7 +19,7 @@ construct_asteroid()
        * to get a final range of -5.0f to 5.0f -- the width of the screen
        */
       .x     = ((drand48() * 10.0f) - 5.0f),
-      .y     = 4.0f,
+      .y     = 5.0f,
       .angle = rand() % 91,
     },
     .radius = 0.5,
@@ -51,53 +51,27 @@ construct_asteroid()
 
 void
 handle_asteroids(struct Polygon *asteroids[], 
-                 int            level)
+                 float          speed)
 {
-  int   i, j;
-  bool  visible;
-  float speed = (float)level / 10;
+  int i, j;
 
-  for (i = 0; i < level; i++) {
-    /* create asteroids -- one for each level */
+  /* the num asteroids are based on the speed, which increases as time goes */
+  int num_asteroids = (int)(speed * 10) + 1;
+
+  for (i = 0; i < num_asteroids; i++) {
+
     if (asteroids[i] == NULL) { 
       asteroids[i] = construct_asteroid();
     }
 
     asteroids[i]->center.y -= speed;
 
-    /* check for visibility at all points */
-    visible = false;
-    for (j = 0; j < asteroids[i]->sides; j++) {
-      if (vertex_visible(asteroids[i]->vertices[j])) {
-        visible = true;
-        break;
-      }
-    }
-    
-    /* if it ain't visible anymore, make a new one */
-    if (!visible) {
-      deconstruct_asteroid(asteroids[i]);
+    /* if it ain't visible anymore off the bottom, make a new one */
+    if (below_screen(*asteroids[i])) {
+      deconstruct_polygon(asteroids[i]);
       asteroids[i] = construct_asteroid();
     }
 
     update_vertices(asteroids[i]);
   }
-}
-
-/* Free the space of our asteroids */
-void
-deconstruct_asteroids(struct Polygon *p[])
-{
-  int i;
-  for (i = 0; i < MAX_ASTEROIDS; i++) {
-    if (p[i] == NULL) { continue; }
-    deconstruct_asteroid(p[i]);
-  }
-}
-
-void
-deconstruct_asteroid(struct Polygon *p)
-{
-  free(p->vertices);
-  free(p);
 }
