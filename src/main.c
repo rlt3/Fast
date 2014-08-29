@@ -6,6 +6,7 @@
 
 #include "polygon.h"
 #include "asteroid.h"
+#include "star.h"
 
 #define PLAYER_ANGLES    3
 
@@ -93,21 +94,21 @@ handle_collision(struct Polygon *asteroids[],
   }
 }
 
-/* Draw our asteroids */
+/* draw quad from a pointer array */
 void
-display_asteroids(SDL_Renderer* displayRenderer, 
-                  struct Polygon* asteroids[MAX_ASTEROIDS])
+display_quads(SDL_Renderer   *displayRenderer, 
+              struct Polygon *quads[],
+              int             max)
 {
+  int i, j;
   glBegin(GL_QUADS);
-    int j, i;
-    for (j = 0; j < MAX_ASTEROIDS; j++) {
-      if (asteroids[j] == NULL) { continue; }
+    for (i = 0; i < max; i++) {
+      if (quads[i] == NULL) { continue; }
 
-      for (i = 0; i < ASTEROID_ANGLES; i++) {
-        glVertex2f(asteroids[j]->vertices[i].x, asteroids[j]->vertices[i].y);
+      for (j = 0; j < quads[i]->sides; j++) {
+        glVertex2f(quads[i]->vertices[j].x, quads[i]->vertices[j].y);
       }
     }
-
   glEnd();
 }
 
@@ -141,6 +142,11 @@ main(int argc, char *argv[])
   srand(time(NULL));
   srand48(time(NULL));
 
+  struct Polygon * stars[MAX_STARS]         = { NULL };
+  struct Polygon * asteroids[MAX_ASTEROIDS] = { NULL };
+
+  construct_all_stars(stars);
+
   int i;
 
   struct Vertex vertices[PLAYER_ANGLES] = { 
@@ -155,8 +161,6 @@ main(int argc, char *argv[])
     .radius   = 1,
     .sides    = PLAYER_ANGLES
   };
-
-  struct Polygon * asteroids[MAX_ASTEROIDS] = { NULL };
 
   /* Initiate our SDL library, window, and render, and declare our variables */ 
   SDL_Init(SDL_INIT_VIDEO);
@@ -243,7 +247,8 @@ main(int argc, char *argv[])
       set_display(displayRenderer);
 
       display_player(displayRenderer, player);
-      display_asteroids(displayRenderer, asteroids);
+      display_quads(displayRenderer, asteroids, MAX_ASTEROIDS);
+      display_quads(displayRenderer,     stars, MAX_STARS);
 
       render(displayRenderer);
     }
@@ -251,6 +256,7 @@ main(int argc, char *argv[])
   
   SDL_Quit();
   deconstruct_asteroids(asteroids);
+  deconstruct_stars(stars);
 
   return 0;
 }
