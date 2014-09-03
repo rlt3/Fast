@@ -156,6 +156,7 @@ deconstruct_polygon_array(struct Polygon *p[], int max)
   for (i = 0; i < max; i++) {
     if (p[i] == NULL) { continue; }
     deconstruct_polygon(p[i]);
+    p[i] = NULL;
   }
 }
 

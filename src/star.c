@@ -53,9 +53,8 @@ handle_stars(struct Polygon *stars[], float speed)
       stars[i] = construct_star();
     }
 
-    /* if it ain't visible anymore, loop it back to the top */
+    /* if it ain't visible anymore, make a new one and set the y above screen */
     if (below_screen(*stars[i])) {
-      //stars[i]->center.y = -stars[i]->center.y;
       deconstruct_polygon(stars[i]);
       stars[i] = construct_star();
       stars[i]->center.y = 5.0f;

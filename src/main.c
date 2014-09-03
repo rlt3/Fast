@@ -65,10 +65,32 @@ Display_SetViewport(int width, int height)
   return 1;
 }
 
+/* setup the display to be drawn on */
+void 
+set_display(SDL_Renderer* displayRenderer)
+{
+  /* Set the background black */
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+  /* Clear The Screen And The Depth Buffer */
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  glLoadIdentity();
+
+  /* Set the center and depth to give us more manageable numbers */
+  glTranslatef(0.0f, 0.0f, -10.0f);
+}
+
+/* wrapper for our library's render function */
+void
+render(SDL_Renderer* displayRenderer) 
+{
+  SDL_RenderPresent(displayRenderer);
+}
+
 /* Draw the player's ship */
 void
-display_player(SDL_Renderer* displayRenderer, 
-               struct Polygon player)
+display_player(SDL_Renderer* displayRenderer, struct Polygon player)
 {
   glBegin(GL_TRIANGLES);
     int i;
@@ -78,20 +100,33 @@ display_player(SDL_Renderer* displayRenderer,
   glEnd();
 }
 
+/* pause until a button is hit */
 void
-handle_collision(struct Polygon *asteroids[], 
-                 struct Polygon  player,
-                 bool           *game)
+pause(SDL_Event *event)
+{
+  while (1) {
+    while (SDL_PollEvent(event)){
+      switch (event->type) {
+        case SDL_KEYDOWN:
+          return;
+      }
+    }
+  }
+}
+
+bool
+player_collision(struct Polygon *asteroids[], 
+                 struct Polygon  player)
 {
   int i;
   for (i = 0; i < MAX_ASTEROIDS; i++) {
     if (asteroids[i] == NULL) { continue; }
 
     if (triangle_intersects_polygon(player, *asteroids[i])) {
-      printf("Collision!\n");
-      *game = false;
+      return true;
     }
   }
+  return false;
 }
 
 /* draw quad from a pointer array */
@@ -112,42 +147,30 @@ display_quads(SDL_Renderer   *displayRenderer,
   glEnd();
 }
 
-/* setup the display to be drawn on */
-void 
-set_display(SDL_Renderer* displayRenderer)
-{
-  /* Set the background black */
-  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-
-  /* Clear The Screen And The Depth Buffer */
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  glLoadIdentity();
-
-  /* Set the center */
-  glTranslatef(0.0f, 0.0f, -10.0f);
-}
-
-/* wrapper for our library's render function */
 void
-render(SDL_Renderer* displayRenderer) 
+set_game(struct Polygon *player, struct Polygon *asteroids[], float *speed)
 {
-  SDL_RenderPresent(displayRenderer);
+  player->center.x =  0.0f;
+  player->center.y = -3.0f;
+  player->center.angle = 90;
+
+  deconstruct_polygon_array(asteroids, MAX_ASTEROIDS);
+  
+  *speed = 0.01f;
 }
 
 int
 main(int argc, char *argv[])
 {
-  /* seed our random number generator */
+  /* seed our random number generators */
   srand(time(NULL));
   srand48(time(NULL));
 
   struct Polygon * stars[MAX_STARS]         = { NULL };
   struct Polygon * asteroids[MAX_ASTEROIDS] = { NULL };
 
+  /* make all the stars now so they show up immediately */
   construct_all_stars(stars);
-
-  int i;
 
   struct Vertex vertices[PLAYER_ANGLES] = { 
     (struct Vertex) { 0, 0,    0 },
@@ -158,7 +181,7 @@ main(int argc, char *argv[])
   struct Polygon player = (struct Polygon) {
     .center   = (struct Vertex){ 0.0f, -3.0f, 90 },
     .vertices = vertices,
-    .radius   = 1,
+    .radius   = 0.75,
     .sides    = PLAYER_ANGLES
   };
 
@@ -191,12 +214,6 @@ main(int argc, char *argv[])
 
   while (game) {
 
-    /*
-     * TODO:
-     *  Gradually make the speed of the game increase instead of just
-     *  incrementing it. It is too noticeable.
-     */
-
     /* Every 10 seconds make the player faster */
     if (SDL_GetTicks() - last_speed > 1000) {
       last_speed = SDL_GetTicks();
@@ -220,6 +237,7 @@ main(int argc, char *argv[])
 
       const Uint8 *keystate = SDL_GetKeyboardState(NULL);
 
+      /* reset to 90 degrees when player isn't turning */
       player.center.angle = 90;
 
       /* Movement up and down */
@@ -247,8 +265,6 @@ main(int argc, char *argv[])
       handle_stars(stars, speed);
       update_vertices(&player);
 
-      handle_collision(asteroids, player, &game);
-
       set_display(displayRenderer);
 
       display_player(displayRenderer, player);
@@ -256,6 +272,12 @@ main(int argc, char *argv[])
       display_quads(displayRenderer,     stars, MAX_STARS);
 
       render(displayRenderer);
+
+      /* do collision after rendering so the player can visually see it */
+      if (player_collision(asteroids, player)) {
+        pause(&event);
+        set_game(&player, asteroids, &speed);
+      }
     }
   }
   
