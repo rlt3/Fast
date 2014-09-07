@@ -1,12 +1,6 @@
 #include "vertex.h"
 
 struct Vertex
-vertex_shift(struct Vertex vertex, float amount)
-{
-  return create_vertex(vertex.x, vertex.y, amount, 0, vertex.angle);
-}
-
-struct Vertex
 create_vertex(float x, float y, float radius, float offset, float angle)
 {
   return (struct Vertex) {

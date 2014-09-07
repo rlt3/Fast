@@ -20,6 +20,8 @@ initialize_game(struct Game *game)
   game->frame_time = SDL_GetTicks();
   game->speed_time = game->frame_time;
 
+  //animate_player(game);
+
   return 0;
 }
 
@@ -34,7 +36,7 @@ construct_player()
   }
 
   *p = (struct Polygon) {
-    .center   = (struct Vertex){ 0.0f, -3.0f, 90 },
+    .center   = (struct Vertex){ 0.0f, -5.0f, 90 },
     .radius   = 0.75,
     .sides    = PLAYER_ANGLES
   };
@@ -205,11 +207,6 @@ construct_all_stars(struct Polygon *stars[])
   }
 }
 
-void
-handle_input(const Uint8 keystate[])
-{
-}
-
 /* pause until a button is hit */
 void
 pause(SDL_Event *event)
@@ -252,19 +249,137 @@ set_game(struct Polygon *player, struct Polygon *asteroids[], float *speed)
   *speed = 0.01f;
 }
 
-
-int
+void
 display_game(struct Game *game)
 {
   set_display();
   display_triangle(*game->player);
   display_quads(game->asteroids, MAX_ASTEROIDS);
   display_quads(game->stars,     MAX_STARS);
+  render(&game->graphics);
 }
 
 void
 cleanup_game(struct Game *game)
 {
+  SDL_Quit();
   deconstruct_polygon_array(game->asteroids, MAX_ASTEROIDS);
   deconstruct_polygon_array(game->stars,     MAX_STARS);
+}
+
+int
+gather_input()
+{
+  const Uint8 *keystate = SDL_GetKeyboardState(NULL);
+
+  if (keystate[SDL_SCANCODE_W]) {
+    return SDL_SCANCODE_W;
+  }
+
+  if (keystate[SDL_SCANCODE_A]) {
+    return SDL_SCANCODE_A;
+  }
+
+  if (keystate[SDL_SCANCODE_S]) {
+    return SDL_SCANCODE_S;
+  }
+
+  if (keystate[SDL_SCANCODE_D]) {
+    return SDL_SCANCODE_D;
+  }
+
+  if (keystate[SDL_SCANCODE_ESCAPE]) {
+    return SDL_SCANCODE_ESCAPE;
+  }
+
+  return -1;
+}
+
+void
+handle_input(struct Game * game, int input)
+{
+  game->player->center.angle = 90;
+
+  switch(input) {
+    case SDL_SCANCODE_W:
+      game->player->center.y += 0.1f;
+      break;
+
+    case SDL_SCANCODE_S:
+      game->player->center.y -= 0.1f;
+      break;
+
+    case SDL_SCANCODE_A:
+      game->player->center.angle = 110;
+      game->player->center.x -= game->speed + 0.25;
+      break;
+
+    case SDL_SCANCODE_D:
+      game->player->center.angle = 70;
+      game->player->center.x += game->speed + 0.25;
+      break;
+
+    case SDL_SCANCODE_ESCAPE:
+      game->running = false;
+      break;
+  }
+}
+
+void
+animate_player(struct Game *game)
+{
+  int time = 5; /* animate over 5 seconds */
+
+  /*
+   * instead of a destination point, give input like the player would so we can
+   * start handling 'rewinding'. So, since we want to move up at this time we
+   * would just give 5 up inputs to this animation function.
+   *
+   * The same function that handles input by the player can handle input by us
+   * as well.
+   *
+   * For this to work, also, the player needs to be 'spawned' under the screen
+   * too.
+   *
+   * So, all in all, this function should accept some sort of stack object (last
+   * in first out) of input and the game pointer and should pop the stack and 
+   * use that as if the player was inputting it themselves.
+   */
+
+  bool time_left = true;
+
+  Uint32 start_time = SDL_GetTicks();
+
+  /* use the same loop as normal, except player cannot interact */
+  while (time_left) {
+
+    /* after 5 seconds, end loop */
+    if (SDL_GetTicks() - start_time > 5000) {
+      time_left = false;
+    }
+
+    /* around 30 frames per second */
+    if (SDL_GetTicks() - game->frame_time > 33) {
+      game->frame_time = SDL_GetTicks();
+
+      /* move towards the player starting position and don't go over it */
+      if (game->player->center.y < -3.0f) {
+        game->player->center.y += 0.05f;
+      }
+
+      /*
+       * update player's ship making sure it updates every second in accordance
+       * with the time limit. Meaning it better be at the destination in the 5
+       * seconds given.
+       */
+
+      handle_stars(game->stars, game->speed);
+      update_vertices(game->player);
+    }
+
+    set_display();
+    display_triangle(*game->player);
+    display_quads(game->stars,MAX_STARS);
+    render(&game->graphics);
+  }
 }

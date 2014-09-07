@@ -128,3 +128,9 @@ display_quads(struct Polygon *quads[],
     }
   glEnd();
 }
+
+void
+cleanup_graphics()
+{
+  SDL_Quit();
+}
