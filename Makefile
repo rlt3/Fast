@@ -17,7 +17,7 @@ ${OBJECTS}: ${OBJDIR}/%.o : ${SRCDIR}/%.c
 	$(CC) -c $< -o $@ ${LIBRARIES}
 
 ${EXECUTABLE}: ${OBJECTS}
-	${CC} -Wall -o $@ ${OBJECTS} ${LIBRARIES} ${FRAMEWORKS}
+	${CC} -Wall -o $@ src/libSOIL.a ${OBJECTS} ${LIBRARIES} ${FRAMEWORKS}
 
 clean:
 	rm -f ${OBJDIR}/*.o fast

@@ -14,6 +14,8 @@ main(int argc, char *argv[])
   Uint32 current_time = SDL_GetTicks();
   Uint32 input_frames = current_time;
 
+  //game.speed = 0.0f;
+
   while (game.running) {
 
     current_time = SDL_GetTicks();
@@ -43,20 +45,22 @@ main(int argc, char *argv[])
       handle_input(&game, input);
 
       handle_asteroids(game.asteroids, game.speed);
-      handle_stars(game.stars, game.speed);
+      //handle_stars(game.stars, game.speed);
       update_vertices(game.player);
     }
 
     display_game(&game);
 
     /* do collision after rendering so the player can visually see it */
-    if (player_collision(game.asteroids, *game.player)) {
-      pause(&game.event);
-      set_game(game.player, game.asteroids, &game.speed);
-    }
+    //if (player_collision(game.asteroids, *game.player)) {
+    //  pause(&game.event);
+    //  set_game(game.player, game.asteroids, &game.speed);
+    //}
   }
 
   cleanup_game(&game);
+
+  //free(game.graphics.texture);
 
   return 0;
 }
