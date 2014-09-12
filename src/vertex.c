@@ -35,6 +35,7 @@ destroy_vertices_array(float **array, int length)
   free(array);
 }
 
+/* Create a vertex from a center point & angle */
 void
 create_vertex(float vertex[], 
     float x, 
@@ -54,31 +55,23 @@ distance(float a[], float b[])
   return sqrt(pow((b[X] - a[X]), 2) + pow((b[Y] - a[Y]), 2));
 }
 
-///* the midpoint formula */
-//struct Vertex
-//midpoint(struct Vertex a, struct Vertex b)
-//{
-//  return (struct Vertex) {
-//    .x = ((a.x + b.x) / 2),
-//    .y = ((a.y + b.y) / 2),
-//  };
-//}
+/* fill a vertex array with the midpoint */
+void
+midpoint(float array[], float a[], float b[])
+{
+  array[X] = ((a[X] + b[X]) / 2);
+  array[Y] = ((a[Y] + b[Y]) / 2);
+}
 
-//struct Vertex
-//create_vertex(float x, float y, float radius, float offset, float angle)
-//{
-//  return (struct Vertex) {
-//    .x = (x + (radius * cos((angle + offset) * (M_PI/180)))),
-//    .y = (y + (radius * sin((angle + offset) * (M_PI/180)))),
-//    .angle = angle
-//  };
-//}
-//
-//bool
-//vertex_visible(struct Vertex vertex)
-//{
-//  return (vertex.y > -Y_LENGTH &&
-//          vertex.y <  Y_LENGTH &&
-//          vertex.x > -X_LENGTH &&
-//          vertex.x <  X_LENGTH);
-//}
+/* area of a triangle from its 3 points */
+float
+triangle_area(float x[], float y[], float z[])
+{
+  float a = distance(x, y);
+  float b = distance(y, z);
+  float c = distance(z, x);
+
+  float s = (a + b + c) / 2;
+
+  return sqrt(s * (s - a) * (s - b) * (s - c));
+}

@@ -3,7 +3,6 @@
 void 
 Display_InitGL()
 {
-
   /* Enable smooth shading */
   glShadeModel(GL_SMOOTH);
 
@@ -57,6 +56,50 @@ Display_SetViewport(int width, int height)
 }
 
 int
+load_textures(struct Graphics *graphics)
+{
+
+  graphics->asteroid_texture = SOIL_load_OGL_texture("asteroid.png",
+      SOIL_LOAD_AUTO,
+      SOIL_CREATE_NEW_ID,
+      SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | 
+      SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT);
+  
+  /* check for an error during the load process */
+  if( 0 == graphics->asteroid_texture ) {
+    printf( "SOIL loading error: '%s'\n", SOIL_last_result() );
+    return 1;
+  }
+
+  graphics->ship_texture = SOIL_load_OGL_texture("ship.png",
+      SOIL_LOAD_RGBA,
+      SOIL_CREATE_NEW_ID,
+      SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | 
+      SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT);
+
+  /* check for an error during the load process */
+  if( 0 == graphics->ship_texture ) {
+    printf( "SOIL loading error: '%s'\n", SOIL_last_result() );
+    return 1;
+  }
+
+  graphics->main_screen_texture = SOIL_load_OGL_texture("fast.png",
+      //SOIL_LOAD_AUTO,
+      SOIL_LOAD_RGBA,
+      SOIL_CREATE_NEW_ID,
+      SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | 
+      SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT);
+
+  /* check for an error during the load process */
+  if( 0 == graphics->main_screen_texture ) {
+    printf( "SOIL loading error: '%s'\n", SOIL_last_result() );
+    return 1;
+  }
+
+  return 0;
+}
+
+int
 initialize_graphics(struct Graphics *graphics)
 {
   SDL_Init(SDL_INIT_VIDEO);
@@ -72,45 +115,11 @@ initialize_graphics(struct Graphics *graphics)
     return 1;
   }
 
-  graphics->texture = SOIL_load_OGL_texture
-  (
-    "asteroid.png",
-    SOIL_LOAD_AUTO,
-    SOIL_CREATE_NEW_ID,
-    SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT
-  );
-  
-  /* check for an error during the load process */
-  if( 0 == graphics->texture ) {
-    printf( "SOIL loading error: '%s'\n", SOIL_last_result() );
+  if (DISPLAY_TEXTURES) {
+    if (load_textures(graphics) != 0) {
+      return 2;
+    }
   }
-
-  //glGenTextures(1, &graphics->texture);
-  //glBindTexture(GL_TEXTURE_2D, graphics->texture);
-
-  //int width, height;
-  //unsigned char* image =
-  //    SOIL_load_image("ship.bmp", &width, &height, 0, SOIL_LOAD_RGB);
-
-  //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
-  //              GL_UNSIGNED_BYTE, image);
-
-  //SOIL_free_image_data(image);
- 
-  // Poor filtering, or ...
-  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
- 
-  // ... nice trilinear filtering.
-  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  //glGenerateMipmap(GL_TEXTURE_2D);
-
-  //if (LoadTexture(graphics, "ship.bmp") != 0) {
-  //  return 2;
-  //}
 
   Display_InitGL();
   Display_SetViewport(800, 600);
@@ -141,57 +150,30 @@ render(struct Graphics *graphics)
   SDL_RenderPresent(graphics->renderer);
 }
 
-/* Draw the player's ship */
-//void
-//display_triangle(struct Graphics *graphics, struct Polygon p)
-//{
-//  //glEnable(GL_TEXTURE_2D);
-//  //glBindTexture(GL_TEXTURE_2D, graphics->texture);
-//
-//  //glBegin(GL_TRIANGLES);
-//  //  glTexCoord2f(0.5f, 1.0f);
-//  //  glVertex2f(0.0f, 1.0f);
-//
-//  //  glTexCoord2f(0.0f, 0.0f);
-//  //  glVertex2f(-1.0f, -1.0f);
-//
-//  //  glTexCoord2f(1.0f, 0.0f);
-//  //  glVertex2f(1.0f, -1.0f);
-//  //glEnd();
-//
-//  //glDisable(GL_TEXTURE_2D);
-//
-//  //glEnable(GL_TEXTURE_2D);
-//  //glBindTexture(GL_TEXTURE_2D, graphics->texture);
-//  //glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-//
-//  glBegin(GL_TRIANGLES);
-//    int i;
-//    for (i = 0; i < 3; i++) {
-//      //switch(i) {
-//      //  case 0:
-//      //    glTexCoord2f(0.5f, 1.0f);
-//      //  case 1:
-//      //    glTexCoord2f(0.0f, 0.0f);
-//      //  case 2:
-//      //    glTexCoord2f(1.0f, 0.0f);
-//      //}
-//
-//      //glTexCoord2f(p.vertices[i].x, p.vertices[i].y);
-//      glVertex2f(p.vertices[i].x, p.vertices[i].y);
-//    }
-//  glEnd();
-//  //glDisable(GL_TEXTURE_2D);
-//}
-
 void 
 display_triangle(GLuint texture, float  x, float  y, float **vertices)
 {
-  //glEnable(GL_TEXTURE_2D);
-  //glBindTexture(GL_TEXTURE_2D, texture);
-  glPushMatrix();
-  glTranslatef(x, y, -10.0f);
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, texture);
 
+  glEnable (GL_BLEND);
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
+
+  //glBegin(GL_QUADS);
+  //    glTexCoord2f(1.0f, 1.0f);
+  //    glVertex2f(x + 0.75f, y + 0.75f);
+
+  //    glTexCoord2f(0.0f, 1.0f);
+  //    glVertex2f(x - 0.75f, y + 0.75f);
+
+  //    glTexCoord2f(0.0f, 0.0f);
+  //    glVertex2f(x - 0.75f, y - 0.75f);
+
+  //    glTexCoord2f(1.0f, 0.0f);
+  //    glVertex2f(x + 0.75f, y - 0.75f);
+  //glEnd();
+  //glDisable(GL_TEXTURE_2D);
+  
   glBegin(GL_TRIANGLES);
     int i;
     for (i = 0; i < 3; i++) {
@@ -212,88 +194,10 @@ display_triangle(GLuint texture, float  x, float  y, float **vertices)
     }
   glEnd();
 
-  glPopMatrix();
-  //glDisable(GL_TEXTURE_2D);
-}
+  glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_2D);
 
-/* draw quad from a pointer array */
-//void
-//display_quads(struct Graphics *graphics, struct Polygon *quads[],
-//              int             max)
-//{
-//  //glBegin(GL_QUADS);
-//  //  glTexCoord2f(0.0f, 1.0f);
-//  //  glVertex2f(-2.0f, 2.0f);
-//
-//  //  glTexCoord2f(1.0f, 1.0f);
-//  //  glVertex2f(2.0f, 2.0f);
-//
-//  //  glTexCoord2f(1.0f, 0.0f);
-//  //  glVertex2f(2.0f, -2.0f);
-//
-//  //  glTexCoord2f(0.0f, 0.0f);
-//  //  glVertex2f(-2.0f, -2.0f);
-//  //glEnd();
-//
-//  //glDisable(GL_TEXTURE_2D);
-//
-//  glEnable(GL_TEXTURE_2D);
-//  glBindTexture(GL_TEXTURE_2D, graphics->texture);
-//  int   i, j;
-//  float x, y;
-//    for (i = 0; i < max; i++) {
-//      if (quads[i] == NULL) { continue; }
-////
-////      x = quads[i]->center.x;
-////      y = quads[i]->center.y;
-////
-////      /* push our current setup so we can pop and go back */
-////      glPushMatrix();
-////
-//     // glTranslatef(x, y, -10.0f);
-//
-//     // glBegin(GL_QUADS);
-//     //   glTexCoord2f(0.0f, 0.0f);
-//     //   glVertex2f(-x, -y);
-//
-//     //   glTexCoord2f(1.0f, 0.0f);
-//     //   glVertex2f(x, -y);
-//
-//     //   glTexCoord2f(1.0f, 1.0f);
-//     //   glVertex2f(x, y);
-//
-//     //   glTexCoord2f(0.0f, 1.0f);
-//     //   glVertex2f(-x, y);
-//
-//      for (j = 0; j < 4; j++) {
-//        switch(j) {
-//          case 0:
-//            glTexCoord2f(1.0f, 1.0f);
-//            break;
-//
-//          case 1:
-//            glTexCoord2f(0.0f, 1.0f);
-//            break;
-//
-//          case 2:
-//            glTexCoord2f(0.0f, 0.0f);
-//            break;
-//            
-//          case 3:
-//            glTexCoord2f(1.0f, 0.0f);
-//            break;
-//        }
-//
-//        glVertex2f(quads[i]->vertices[j].x, quads[i]->vertices[j].y);
-//      }
-//      
-//      glEnd();
-//
-//      //glPopMatrix();
-//    }
-//
-//  glDisable(GL_TEXTURE_2D);
-//}
+}
 
 void 
 display_quad(GLuint texture, float  x, float  y, float **vertices)
@@ -301,11 +205,8 @@ display_quad(GLuint texture, float  x, float  y, float **vertices)
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, texture);
 
-  /* save current opengl settings */
-  glPushMatrix();
-
-  /* then translate so we have an easy reference for drawing + texturing */
-  glTranslatef(x, y, -10.0f);
+  glEnable (GL_BLEND);
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
 
   glBegin(GL_QUADS);
     int i;
@@ -332,9 +233,7 @@ display_quad(GLuint texture, float  x, float  y, float **vertices)
     }
   glEnd();
 
-  /* go back to the saved settings */
-  glPopMatrix();
-
+  glDisable(GL_BLEND);
   glDisable(GL_TEXTURE_2D);
 }
 

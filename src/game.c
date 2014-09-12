@@ -12,110 +12,23 @@ initialize_game(struct Game *game)
   srand48(time(NULL));
 
   /* make all the stars now so they show up immediately */
-  //construct_all_stars(game->stars);
+  construct_all_stars(game->stars);
 
   game->player     = construct_player();
   game->running    = true;
   game->speed      = BASE_SPEED;
-  game->frame_time = SDL_GetTicks();
-  game->speed_time = game->frame_time;
 
-  //animate_player(game);
+  game->current_time = SDL_GetTicks();
+  game->frame_time   = game->current_time;
+  game->speed_time   = game->current_time;
+  game->input_time   = game->current_time;
+
+  start_screen(game);
+  animate_player(game);
 
   return 0;
 }
 
-//struct Polygon *
-//construct_player()
-//{
-//  struct Polygon *p = (struct Polygon*) malloc(sizeof(struct Polygon));
-//
-//  if (p == NULL) {
-//    fprintf(stderr, "%s\n", "Out of memory.");
-//    exit(1);
-//  }
-//
-//  *p = (struct Polygon) {
-//    .center   = (struct Vertex){ 0.0f, -5.0f, 90 },
-//    .radius   = 0.75,
-//    .sides    = PLAYER_ANGLES
-//  };
-//
-//  p->vertices = (struct Vertex*) malloc(sizeof(struct Vertex) * PLAYER_ANGLES);
-//
-//  if (p->vertices == NULL) {
-//    fprintf(stderr, "%s\n", "Out of memory.");
-//    exit(1);
-//  }
-//
-//  p->vertices[0] = (struct Vertex) { 0, 0,    0 };
-//  p->vertices[1] = (struct Vertex) { 0, 0, -135 };
-//  p->vertices[2] = (struct Vertex) { 0, 0,  135 };
-//
-//  p->angles = { 0, -135, 135 };
-//
-//  /* not real function yet: */
-//  p->vertices = (float**) malloc(sizeof(float*) * sides);
-//
-//  int i;
-//  for (i = 0; i < sides; i++) {
-//    p->vertices[i] = (float*) malloc(sizeof(float) * 2); // two dimensions
-//  }
-//
-//  //p->vertices = { {}, {}, {} };
-//
-//  return p;
-//}
-//
-///* create randomized asteroids to kill our player */
-//struct Polygon *
-//construct_asteroid() 
-//{
-//  struct Polygon *p = (struct Polygon*) malloc(sizeof(struct Polygon));
-//
-//  if (p == NULL) {
-//    fprintf(stderr, "%s\n", "Out of memory.");
-//    exit(1);
-//  }
-//
-//  *p = (struct Polygon) {
-//    .center = (struct Vertex){ 
-//      /* 
-//       * Generate a random number between 0.0f and 1.0f, multiply it
-//       * by 10 to get a range from 0.0f to 10.0f and then subtract 5.0f
-//       * to get a final range of -5.0f to 5.0f -- the width of the screen
-//       */
-//      .x     = ((drand48() * 10.0f) - 5.0f),
-//      .y     = 5.0f,
-//      .angle = rand() % 91,
-//    },
-//    .radius = 0.5,
-//    .sides  = ASTEROID_ANGLES
-//  };
-//
-//  p->vertices = (struct Vertex*) malloc(sizeof(struct Vertex) * ASTEROID_ANGLES);
-//
-//  if (p->vertices == NULL) {
-//    fprintf(stderr, "%s\n", "Out of memory.");
-//    exit(1);
-//  }
-//
-//  /* handle any polygon by splitting 360 degrees among the sides */
-//  int angle_portion = 360 / p->sides;
-//
-//  /* make our asteroids random by generating an angle for each side */
-//  int i;
-//  for (i = 0; i < p->sides; i++) {
-//    p->vertices[i] = (struct Vertex){ 
-//      .x     = 0,
-//      .y     = 0,
-//      .angle = (angle_portion * i) + rand() % 91
-//    };
-//  }
-//
-//  return p;
-//}
-//
 void
 handle_asteroids(struct Polygon *asteroids[], float speed)
 {
@@ -133,95 +46,99 @@ handle_asteroids(struct Polygon *asteroids[], float speed)
     //asteroids[i]->center.y -= speed;
     asteroids[i]->y -= speed;
 
-    ///* if it ain't visible anymore off the bottom, make a new one */
-    //if (below_screen(*asteroids[i])) {
-    //  deconstruct_polygon(asteroids[i]);
-    //  asteroids[i] = construct_asteroid();
-    //}
+    /* if it ain't visible anymore off the bottom, make a new one */
+    if (below_screen(*asteroids[i])) {
+      deconstruct_polygon(asteroids[i]);
+      asteroids[i] = construct_asteroid();
+    }
 
     update_vertices(asteroids[i]);
   }
 }
-//
-//struct Polygon *
-//construct_star()
-//{
-//  struct Polygon *p = (struct Polygon*) malloc(sizeof(struct Polygon));
-//
-//  if (p == NULL) {
-//    fprintf(stderr, "%s\n", "Out of memory.");
-//    exit(1);
-//  }
-//
-//  *p = (struct Polygon) {
-//    .center = (struct Vertex){ 
-//      /* Random point on the screen, facing up */
-//      .x     = ((drand48() * 10.0f) - 5.0f),
-//      .y     = ((drand48() *  9.0f) - 4.5f),
-//      .angle = 0,
-//    },
-//    .radius = 0.025,
-//    .sides  = STAR_ANGLES
-//  };
-//
-//  p->vertices = (struct Vertex*) malloc(sizeof(struct Vertex) * STAR_ANGLES);
-//
-//  if (p->vertices == NULL) {
-//    fprintf(stderr, "%s\n", "Out of memory.");
-//    exit(1);
-//  }
-//
-//  /* handle any polygon by splitting 360 degrees among the sides */
-//  int angle_portion = 360 / p->sides;
-//
-//  /* all of our stars are just rectangles/squares */
-//  p->vertices[0] = (struct Vertex) { 0, 0,  45 };
-//  p->vertices[1] = (struct Vertex) { 0, 0, 135 };
-//  p->vertices[2] = (struct Vertex) { 0, 0,-135 };
-//  p->vertices[3] = (struct Vertex) { 0, 0, -45 };
-//
-//  return p;
-//}
-//
-//void
-//handle_stars(struct Polygon *stars[], float speed)
-//{
-//  int i;
-//
-//  /* move slower than asteroids to simluate a parallax effect */
-//  speed = speed / 3.0f;
-//  
-//  for (i = 0; i < MAX_STARS; i++) {
-//    if (stars[i] == NULL) {
-//      stars[i] = construct_star();
-//    }
-//
-//    /* if it ain't visible anymore, make a new one and set the y above screen */
-//    if (below_screen(*stars[i])) {
-//      deconstruct_polygon(stars[i]);
-//      stars[i] = construct_star();
-//      stars[i]->center.y = 5.0f;
-//    }
-//
-//    stars[i]->center.y -= speed;
-//
-//    update_vertices(stars[i]);
-//  }
-//}
-//
-//void 
-//construct_all_stars(struct Polygon *stars[])
-//{
-//  int i;
-//  for (i = 0; i < MAX_STARS; i++) {
-//    stars[i] = construct_star();
-//    update_vertices(stars[i]);
-//  }
-//}
-//
-///* pause until a button is hit */
+
 void
-pause(SDL_Event *event)
+handle_stars(struct Polygon *stars[], float speed)
+{
+  int i;
+
+  /* move slower than asteroids to simluate a parallax effect */
+  speed = speed / 3.0f;
+  
+  for (i = 0; i < MAX_STARS; i++) {
+    if (stars[i] == NULL) {
+      stars[i] = construct_star();
+    }
+
+    stars[i]->y -= speed;
+
+    /* if it ain't visible anymore, make a new one and set the y above screen */
+    if (below_screen(*stars[i])) {
+      deconstruct_polygon(stars[i]);
+      stars[i] = construct_star();
+      stars[i]->y = 5.0f;
+    }
+
+    update_vertices(stars[i]);
+  }
+}
+
+void 
+construct_all_stars(struct Polygon *stars[])
+{
+  int i;
+  for (i = 0; i < MAX_STARS; i++) {
+    stars[i] = construct_star();
+  }
+}
+
+/* main menu start screen */
+void
+start_screen(struct Game *game)
+{
+  bool pre_game = true;
+
+  float **logo_vertices = make_vertices_array(4);
+  
+  logo_vertices[0][X] =  4.0;
+  logo_vertices[0][Y] =  2.0;
+  logo_vertices[1][X] = -4.0;
+  logo_vertices[1][Y] =  2.0;
+  logo_vertices[2][X] = -4.0;
+  logo_vertices[2][Y] = -2.0;
+  logo_vertices[3][X] =  4.0;
+  logo_vertices[3][Y] = -2.0;
+
+  while (pre_game) {
+    game->current_time = SDL_GetTicks();
+
+    while (SDL_PollEvent(&game->event)){
+      switch (game->event.type) {
+        case SDL_KEYDOWN:
+          pre_game = false;
+      }
+    }
+
+    /* around 30 frames per second */
+    if (game->current_time - game->frame_time > THIRTY_FPS) {
+      game->frame_time = game->current_time;
+
+      handle_stars(game->stars, game->speed);
+    }
+
+    set_display();
+    display_stars(game);
+
+    display_quad(game->graphics.main_screen_texture, 0, 0, logo_vertices);
+
+    render(&game->graphics);
+  }
+
+  destroy_vertices_array(logo_vertices, 4);
+}
+
+/* pause until a button is hit */
+void
+pause_screen(SDL_Event *event)
 {
   while (1) {
     while (SDL_PollEvent(event)){
@@ -232,30 +149,25 @@ pause(SDL_Event *event)
     }
   }
 }
-//
-//bool
-//player_collision(struct Polygon *asteroids[], 
-//                 struct Polygon  player)
-//{
-//  int i;
-//  for (i = 0; i < MAX_ASTEROIDS; i++) {
-//    if (asteroids[i] == NULL) { continue; }
-//
-//    if (triangle_intersects_polygon(player, *asteroids[i])) {
-//      return true;
-//    }
-//  }
-//  return false;
-//}
-//
-///* set the game so it can be called to reset at any time */
+
+bool
+player_collision(struct Polygon *asteroids[], struct Polygon  player)
+{
+  int i;
+  for (i = 0; i < MAX_ASTEROIDS; i++) {
+    if (asteroids[i] == NULL) { continue; }
+
+    if (triangle_intersects_polygon(player, *asteroids[i])) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/* set the game so it can be called to reset at any time */
 void
 set_game(struct Polygon *player, struct Polygon *asteroids[], float *speed)
 {
-  //player->center.x =  0.0f;
-  //player->center.y = -3.0f;
-  //player->center.angle = 90;
-
   player->x =  0.0f;
   player->y = -3.0f;
   player->angle = 90;
@@ -269,27 +181,21 @@ void
 display_game(struct Game *game)
 {
   set_display();
-  //display_triangle(&game->graphics, *game->player);
-  
-  display_triangle(game->graphics.texture, 
+
+  display_stars(game);
+  display_player(game);
+  display_asteroids(game);
+
+  render(&game->graphics);
+}
+
+void
+display_player(struct Game *game)
+{
+  display_triangle(game->graphics.ship_texture, 
       game->player->x, 
       game->player->y, 
       game->player->vertices);
-
-  //display_quads(&game->graphics, game->asteroids, MAX_ASTEROIDS);
-
-  int i, j;
-  for (i = 0; i < MAX_ASTEROIDS; i++) {
-    if (game->asteroids[i] == NULL) { continue; }
-
-    display_quad(game->graphics.texture, 
-        game->asteroids[i]->x, 
-        game->asteroids[i]->y, 
-        game->asteroids[i]->vertices);
-  }
-
-  //display_quads(&game->graphics, game->stars,     MAX_STARS);
-  render(&game->graphics);
 }
 
 void
@@ -299,10 +205,22 @@ display_asteroids(struct Game *game)
   for (i = 0; i < MAX_ASTEROIDS; i++) {
     if (game->asteroids[i] == NULL) { continue; }
 
-    display_quad(game->graphics.texture, 
+    display_quad(game->graphics.asteroid_texture, 
         game->asteroids[i]->x, 
         game->asteroids[i]->y, 
         game->asteroids[i]->vertices);
+  }
+}
+
+void
+display_stars(struct Game *game)
+{
+  int i, j;
+  for (i = 0; i < MAX_STARS; i++) {
+    if (game->stars[i] == NULL) { continue; }
+
+    display_quad(0, game->stars[i]->x, game->stars[i]->y, 
+        game->stars[i]->vertices);
   }
 }
 
@@ -313,7 +231,13 @@ cleanup_game(struct Game *game)
   deconstruct_polygon_array(game->asteroids, MAX_ASTEROIDS);
   deconstruct_polygon_array(game->stars,     MAX_STARS);
 }
-//
+
+/*
+ * if we are going to 'save' past input from a player and then play it back
+ * to them at any given point, we need to make sure we take and use that
+ * input in a manageable timestep so that when we go backwards we can 
+ * accurately reproduce the movement in time.
+ */
 int
 gather_input()
 {
@@ -343,11 +267,11 @@ gather_input()
 }
 
 void
-handle_input(struct Game * game, int input)
+handle_input(struct Game *game)
 {
   game->player->angle = 90;
 
-  switch(input) {
+  switch(game->input) {
     case SDL_SCANCODE_W:
       game->player->y += 0.1f;
       break;
@@ -370,93 +294,75 @@ handle_input(struct Game * game, int input)
       game->running = false;
       break;
   }
+
+  update_vertices(game->player);
 }
 
-//void
-//handle_input(struct Game * game, int input)
-//{
-//  game->player->center.angle = 90;
-//
-//  switch(input) {
-//    case SDL_SCANCODE_W:
-//      game->player->center.y += 0.1f;
-//      break;
-//
-//    case SDL_SCANCODE_S:
-//      game->player->center.y -= 0.1f;
-//      break;
-//
-//    case SDL_SCANCODE_A:
-//      game->player->center.angle = 110;
-//      game->player->center.x -= game->speed + 0.25;
-//      break;
-//
-//    case SDL_SCANCODE_D:
-//      game->player->center.angle = 70;
-//      game->player->center.x += game->speed + 0.25;
-//      break;
-//
-//    case SDL_SCANCODE_ESCAPE:
-//      game->running = false;
-//      break;
-//  }
-//}
-//
-//void
-//animate_player(struct Game *game)
-//{
-//  int time = 5; /* animate over 5 seconds */
-//
-//  /*
-//   * instead of a destination point, give input like the player would so we can
-//   * start handling 'rewinding'. So, since we want to move up at this time we
-//   * would just give 5 up inputs to this animation function.
-//   *
-//   * The same function that handles input by the player can handle input by us
-//   * as well.
-//   *
-//   * For this to work, also, the player needs to be 'spawned' under the screen
-//   * too.
-//   *
-//   * So, all in all, this function should accept some sort of stack object (last
-//   * in first out) of input and the game pointer and should pop the stack and 
-//   * use that as if the player was inputting it themselves.
-//   */
-//
-//  bool time_left = true;
-//
-//  Uint32 start_time = SDL_GetTicks();
-//
-//  /* use the same loop as normal, except player cannot interact */
-//  while (time_left) {
-//
-//    /* after 5 seconds, end loop */
-//    if (SDL_GetTicks() - start_time > 5000) {
-//      time_left = false;
-//    }
-//
-//    /* around 30 frames per second */
-//    if (SDL_GetTicks() - game->frame_time > 33) {
-//      game->frame_time = SDL_GetTicks();
-//
-//      /* move towards the player starting position and don't go over it */
-//      if (game->player->center.y < -3.0f) {
-//        game->player->center.y += 0.05f;
-//      }
-//
-//      /*
-//       * update player's ship making sure it updates every second in accordance
-//       * with the time limit. Meaning it better be at the destination in the 5
-//       * seconds given.
-//       */
-//
-//      handle_stars(game->stars, game->speed);
-//      update_vertices(game->player);
-//    }
-//
-//    set_display();
-//    display_triangle(&game->graphics, *game->player);
-//    display_quads(&game->graphics, game->stars,MAX_STARS);
-//    render(&game->graphics);
-//  }
-//}
+void
+animate_player(struct Game *game)
+{
+  int time = 5; /* animate over 5 seconds */
+
+  /*
+   * instead of a destination point, give input like the player would so we can
+   * start handling 'rewinding'. So, since we want to move up at this time we
+   * would just give 5 up inputs to this animation function.
+   *
+   * The same function that handles input by the player can handle input by us
+   * as well.
+   *
+   * For this to work, also, the player needs to be 'spawned' under the screen
+   * too.
+   *
+   * So, all in all, this function should accept some sort of stack object (last
+   * in first out) of input and the game pointer and should pop the stack and 
+   * use that as if the player was inputting it themselves.
+   */
+
+  bool time_left = true;
+
+  Uint32 start_time = game->current_time;
+
+  /* use the same loop as normal, except player cannot interact */
+  while (time_left) {
+    game->current_time = SDL_GetTicks();
+
+    /* keep our times current */
+    if (game->current_time - game->speed_time > ONE_SECOND) {
+      game->speed_time = game->current_time;
+    }
+
+    if (game->current_time - game->input_time > 66) { // double frame time
+      game->input_time = game->current_time;
+    }
+
+    /* after 5 seconds, end loop */
+    if (game->current_time - start_time > 5000) {
+      time_left = false;
+    }
+
+    /* around 30 frames per second */
+    if (game->current_time - game->frame_time > 33) {
+      game->frame_time = game->current_time;
+
+      /* move towards the player starting position and don't go over it */
+      if (game->player->y < -3.0f) {
+        game->player->y += 0.05f;
+      }
+
+      /*
+       * update player's ship making sure it updates every second in accordance
+       * with the time limit. Meaning it better be at the destination in the 5
+       * seconds given.
+       */
+
+      handle_stars(game->stars, game->speed);
+      update_vertices(game->player);
+    }
+
+    set_display();
+    display_player(game);
+    display_stars(game);
+    render(&game->graphics);
+  }
+}

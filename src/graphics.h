@@ -8,9 +8,10 @@
 #include "vertex.h"
 #include "SOIL.h"
 
+#define DISPLAY_TEXTURES 1
+
 /* 
- * Handles setting up the window and drawing stuff onto the window .
- * Should probably not reference the polygon struct but oh well.
+ * Handles setting up the window and drawing stuff onto the window.
  *
  * There are lots of comments for setting everything up -- even for simple 
  * things -- because I cannot remember the arcane commands.
@@ -21,18 +22,17 @@ struct Graphics {
   SDL_Renderer     *renderer;
   SDL_RendererInfo  renderer_info;
 
-  GLuint            texture;
+  GLuint            main_screen_texture;
+  GLuint            ship_texture;
+  GLuint            asteroid_texture;
 };
-
-//int LoadTexture(struct Graphics *graphics, const char *filename);
 
 void Display_InitGL();
 int  Display_SetViewport(int width, int height);
+int  load_textures(struct Graphics *graphics);
 int  initialize_graphics(struct Graphics *graphics);
 
 void set_display();
-//void display_triangle(struct Graphics *graphics, struct Polygon p);
-//void display_quads(struct Graphics *graphics, struct Polygon *quads[], int max);
 
 void display_triangle(GLuint texture, float  x, float  y, float **vertices);
 void display_quad(GLuint texture, float  x, float  y, float **vertices);

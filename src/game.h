@@ -28,32 +28,45 @@ struct Game {
   bool            running;
   float           speed;
 
+  Uint32          current_time;
+
   Uint32          frame_time;
   Uint32          speed_time;
+  Uint32          input_time;
+
+  int             input;
 
   SDL_Event       event;
 };
 
 int              initialize_game(struct Game *game);
-//struct Polygon * construct_player();
-//struct Polygon * construct_asteroid();
-//struct Polygon * construct_star();
-void             handle_asteroids(struct Polygon *asteroids[], float speed);
-//void             handle_stars(struct Polygon *stars[], float speed);
-//void             construct_all_stars(struct Polygon *stars[]);
-//
-void             pause(SDL_Event *event);
-//bool             player_collision(struct Polygon *asteroids[], 
-//                     struct Polygon player);
+void             construct_all_stars(struct Polygon *stars[]);
+
+void             animate_player(struct Game *game);
+
 void             set_game(struct Polygon *player, 
                       struct Polygon *asteroids[], 
                       float *speed);
-void             cleanup_game(struct Game *game);
-//
+
 int              gather_input();
-void             handle_input(struct Game * game, int input);
-//void             animate_player(struct Game *game);
-//
+void             handle_input(struct Game * game);
+
+void             handle_asteroids(struct Polygon *asteroids[], float speed);
+void             handle_stars(struct Polygon *stars[], float speed);
+
+void             display_player(struct Game *game);
+void             display_asteroids(struct Game *game);
+void             display_stars(struct Game *game);
 void             display_game(struct Game *game);
+
+void             start_screen(struct Game *game);
+void             pause_screen(SDL_Event *event);
+
+bool             player_collision(struct Polygon *asteroids[], 
+                     struct Polygon player);
+
+void             cleanup_game(struct Game *game);
+
+
 
 #endif
