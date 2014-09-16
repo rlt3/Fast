@@ -13,6 +13,10 @@
 #define BASE_SPEED       0.01f
 #define ONE_SECOND       1000
 #define THIRTY_FPS       (ONE_SECOND/30)
+#define FIFTEEN_FPS      (ONE_SECOND/15)
+
+/* keep input for last 5 seconds */
+#define INPUT_FRAMES     75
 
 /*
  * Handle the state of the game including events such as input or collision.
@@ -36,6 +40,9 @@ struct Game {
 
   int             input;
 
+  int             past_input[INPUT_FRAMES];
+  int             past_input_frame;
+
   SDL_Event       event;
 };
 
@@ -43,12 +50,15 @@ int              initialize_game(struct Game *game);
 void             construct_all_stars(struct Polygon *stars[]);
 
 void             animate_player(struct Game *game);
+void             time_animate_player(struct Game *game);
 
 void             set_game(struct Polygon *player, 
                       struct Polygon *asteroids[], 
                       float *speed);
 
 int              gather_input();
+int              opposite_input(int input);
+void             save_input(struct Game * game, int input);
 void             handle_input(struct Game * game);
 
 void             handle_asteroids(struct Polygon *asteroids[], float speed);

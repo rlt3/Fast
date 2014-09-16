@@ -18,9 +18,9 @@ main(int argc, char *argv[])
       game.speed      = game.speed + 0.01f;
     }
 
-    if (game.current_time - game.input_time > 66) { // double frame time
+    if (game.current_time - game.input_time > FIFTEEN_FPS) { 
       game.input_time = game.current_time;
-      game.input = gather_input();
+      save_input(&game, gather_input());
     }
 
     /* make sure our input state is constantly updated */
@@ -39,8 +39,9 @@ main(int argc, char *argv[])
 
     /* do collision after rendering so the player can visually see it */
     if (player_collision(game.asteroids, *game.player)) {
-      pause_screen(&game.event);
-      set_game(game.player, game.asteroids, &game.speed);
+      //pause_screen(&game.event);
+      time_animate_player(&game);
+      //set_game(game.player, game.asteroids, &game.speed);
     }
   }
 

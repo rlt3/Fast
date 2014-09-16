@@ -23,6 +23,15 @@ initialize_game(struct Game *game)
   game->speed_time   = game->current_time;
   game->input_time   = game->current_time;
 
+  /* set input_frames so it rolls over to 0 on the first loop */
+  game->past_input_frame  = (INPUT_FRAMES - 1);
+
+  /* preset the input to 'nothing' */
+  int i;
+  for (i = 0; i < INPUT_FRAMES; i++) {
+    game->past_input[i] = -1;
+  }
+
   start_screen(game);
   animate_player(game);
 
@@ -183,8 +192,8 @@ display_game(struct Game *game)
   set_display();
 
   display_stars(game);
-  display_player(game);
   display_asteroids(game);
+  display_player(game);
 
   render(&game->graphics);
 }
@@ -237,6 +246,12 @@ cleanup_game(struct Game *game)
  * to them at any given point, we need to make sure we take and use that
  * input in a manageable timestep so that when we go backwards we can 
  * accurately reproduce the movement in time.
+ *
+ *
+ * TODO:
+ *    Reverse the input gather so that when the 'input' is played back to the
+ *    player it does the opposite of what they input. This simulate going
+ *    backwards.
  */
 int
 gather_input()
@@ -264,6 +279,17 @@ gather_input()
   }
 
   return -1;
+}
+
+void
+save_input(struct Game *game, int input) 
+{
+  /* set the of the player */
+  game->input = input;
+
+  /* save the opposite of the player's input so we can 'replay' it */
+  game->past_input_frame = ++game->past_input_frame % 75;
+  game->past_input[game->past_input_frame] = opposite_input(input);
 }
 
 void
@@ -296,6 +322,32 @@ handle_input(struct Game *game)
   }
 
   update_vertices(game->player);
+}
+
+
+int 
+opposite_input(int input)
+{
+  switch(input) {
+    case SDL_SCANCODE_W:
+      return SDL_SCANCODE_S;
+      break;
+
+    case SDL_SCANCODE_S:
+      return SDL_SCANCODE_W;
+      break;
+
+    case SDL_SCANCODE_A:
+      return SDL_SCANCODE_D;
+      break;
+
+    case SDL_SCANCODE_D:
+      return SDL_SCANCODE_A;
+      break;
+
+    default:
+      return -1;
+  }
 }
 
 void
@@ -357,6 +409,58 @@ animate_player(struct Game *game)
        */
 
       handle_stars(game->stars, game->speed);
+      update_vertices(game->player);
+    }
+
+    set_display();
+    display_player(game);
+    display_stars(game);
+    render(&game->graphics);
+  }
+}
+
+/*
+ * move backwards:
+ *   need to have asteroids, stars move backwards as well.
+ *
+ * can use this to animate the player at the beginning perhaps.
+ */
+void
+time_animate_player(struct Game *game)
+{
+  int counter = 0;
+
+  /* use the same loop as normal, except player cannot interact */
+  while (counter < INPUT_FRAMES) {
+    game->current_time = SDL_GetTicks();
+
+    /* keep our times current */
+    if (game->current_time - game->speed_time > ONE_SECOND) {
+      game->speed_time = game->current_time;
+    }
+
+    if (game->current_time - game->input_time > FIFTEEN_FPS) {
+      game->input_time = game->current_time;
+
+      /* set the input from the player's past inputs and move backwards */
+      game->input = game->past_input[game->past_input_frame];
+      game->past_input_frame--;
+
+      /* if the input frame has reach 0, loop it backwards */
+      if (game->past_input_frame < 0) {
+        game->past_input_frame = (INPUT_FRAMES - 1);
+      }
+
+      /* another input frame done */
+      counter++;
+    }
+
+    /* around 30 frames per second */
+    if (game->current_time - game->frame_time > THIRTY_FPS) {
+      game->frame_time = game->current_time;
+
+      //handle_stars(game->stars, game->speed);
+      handle_input(game);
       update_vertices(game->player);
     }
 
