@@ -17,6 +17,7 @@
 
 /* keep input for last 5 seconds */
 #define INPUT_FRAMES     75
+#define NO_INPUT         -1
 
 /*
  * Handle the state of the game including events such as input or collision.
@@ -46,37 +47,51 @@ struct Game {
   SDL_Event       event;
 };
 
-int              initialize_game(struct Game *game);
-void             construct_all_stars(struct Polygon *stars[]);
+int  initialize_game(struct Game *game);
+void construct_all_stars(struct Polygon *stars[]);
 
-void             animate_player(struct Game *game);
-void             time_animate_player(struct Game *game);
+/* gather input, opposite it for replay and reset when done */
+int  gather_input();
+int  opposite_input(int input);
+void save_input(struct Game * game, int input);
+void reset_saved_input(struct Game *game);
 
-void             set_game(struct Polygon *player, 
-                      struct Polygon *asteroids[], 
-                      float *speed);
+/* handle the objects of our game */
+void handle_input(struct Game * game);
+void handle_asteroids(struct Polygon *asteroids[], float speed);
+void handle_stars(struct Polygon *stars[], float speed);
 
-int              gather_input();
-int              opposite_input(int input);
-void             save_input(struct Game * game, int input);
-void             handle_input(struct Game * game);
+void display_player(struct Game *game);
+void display_asteroids(struct Game *game);
+void display_stars(struct Game *game);
+void display_game(struct Game *game);
 
-void             handle_asteroids(struct Polygon *asteroids[], float speed);
-void             handle_stars(struct Polygon *stars[], float speed);
+void start_screen(struct Game *game);
 
-void             display_player(struct Game *game);
-void             display_asteroids(struct Game *game);
-void             display_stars(struct Game *game);
-void             display_game(struct Game *game);
+bool player_collision(struct Polygon *asteroids[], 
+         struct Polygon player);
 
-void             start_screen(struct Game *game);
-void             pause_screen(SDL_Event *event);
+/* main loop used for animation, replaying, and the main loop */
+void main_loop(struct Game *game, 
+        void (*speed)(struct Game *), 
+        void (*input)(struct Game *), 
+        void (*update)(struct Game *), 
+        void (*restraint)(struct Game *, bool *));
 
-bool             player_collision(struct Polygon *asteroids[], 
-                     struct Polygon player);
+/* the functions which are passed into the main loop */
+void animation_update(struct Game *game);
+void animation_restraint(struct Game *game, bool *loop);
 
-void             cleanup_game(struct Game *game);
+void main_speed(struct Game *game);
+void main_input(struct Game *game);
+void main_update(struct Game *game);
+void main_restraint(struct Game *game, bool *looping);
 
+void replay_speed(struct Game *game);
+void replay_input(struct Game *game);
+void replay_update(struct Game *game);
+void replay_restraint(struct Game *game, bool *looping);
 
+void cleanup_game(struct Game *game);
 
 #endif

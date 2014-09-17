@@ -41,6 +41,7 @@ void            update_vertices(struct Polygon *p);
 
 bool          polygon_visible(struct Polygon p);
 bool          below_screen(struct Polygon p);
+bool          above_screen(struct Polygon p);
 
 float         polygon_area(struct Polygon p);
 bool          point_inside_polygon(float origin[], struct Polygon p);

@@ -8,42 +8,8 @@ main(int argc, char *argv[])
   if (initialize_game(&game) != 0) {
     exit(1);
   }
-
-  while (game.running) {
-
-    game.current_time = SDL_GetTicks();
-
-    if (game.current_time - game.speed_time > ONE_SECOND) {
-      game.speed_time = game.current_time;
-      game.speed      = game.speed + 0.01f;
-    }
-
-    if (game.current_time - game.input_time > FIFTEEN_FPS) { 
-      game.input_time = game.current_time;
-      save_input(&game, gather_input());
-    }
-
-    /* make sure our input state is constantly updated */
-    SDL_PollEvent(&game.event);
-
-    if (game.current_time - game.frame_time > THIRTY_FPS) {
-      game.frame_time = game.current_time;
-
-      handle_input(&game);
-
-      handle_asteroids(game.asteroids, game.speed);
-      handle_stars(game.stars, game.speed);
-    }
-
-    display_game(&game);
-
-    /* do collision after rendering so the player can visually see it */
-    if (player_collision(game.asteroids, *game.player)) {
-      //pause_screen(&game.event);
-      time_animate_player(&game);
-      //set_game(game.player, game.asteroids, &game.speed);
-    }
-  }
+  
+  main_loop(&game, main_speed, main_input, main_update, main_restraint);
 
   cleanup_game(&game);
 

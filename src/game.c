@@ -27,32 +27,150 @@ initialize_game(struct Game *game)
   game->past_input_frame  = (INPUT_FRAMES - 1);
 
   /* preset the input to 'nothing' */
-  int i;
-  for (i = 0; i < INPUT_FRAMES; i++) {
-    game->past_input[i] = -1;
-  }
+  reset_saved_input(game);
 
+  /* the start screen */
   start_screen(game);
-  animate_player(game);
+  
+  /* animate player to the starting position */
+  main_loop(game, NULL, NULL, animation_update, animation_restraint);
 
   return 0;
+}
+
+void 
+construct_all_stars(struct Polygon *stars[])
+{
+  int i;
+  for (i = 0; i < MAX_STARS; i++) {
+    stars[i] = construct_star();
+  }
+}
+
+/* Get hard integer input codes so we can use them in other functins */
+int
+gather_input()
+{
+  const Uint8 *keystate = SDL_GetKeyboardState(NULL);
+
+  if (keystate[SDL_SCANCODE_W]) {
+    return SDL_SCANCODE_W;
+  }
+
+  if (keystate[SDL_SCANCODE_A]) {
+    return SDL_SCANCODE_A;
+  }
+
+  if (keystate[SDL_SCANCODE_S]) {
+    return SDL_SCANCODE_S;
+  }
+
+  if (keystate[SDL_SCANCODE_D]) {
+    return SDL_SCANCODE_D;
+  }
+
+  if (keystate[SDL_SCANCODE_ESCAPE]) {
+    return SDL_SCANCODE_ESCAPE;
+  }
+
+  return NO_INPUT;
+}
+
+/* return the opposite: down becomes up, left becomes right */
+int 
+opposite_input(int input)
+{
+  switch(input) {
+    case SDL_SCANCODE_W:
+      return SDL_SCANCODE_S;
+      break;
+
+    case SDL_SCANCODE_S:
+      return SDL_SCANCODE_W;
+      break;
+
+    case SDL_SCANCODE_A:
+      return SDL_SCANCODE_D;
+      break;
+
+    case SDL_SCANCODE_D:
+      return SDL_SCANCODE_A;
+      break;
+
+    default:
+      return NO_INPUT;
+  }
+}
+
+/* save the current input and to our past_input array */
+void
+save_input(struct Game *game, int input) 
+{
+  /* set the of the player */
+  game->input = input;
+
+  /* save the opposite of the player's input so we can 'replay' it */
+  game->past_input_frame = ++game->past_input_frame % 75;
+  game->past_input[game->past_input_frame] = opposite_input(input);
+}
+
+void
+reset_saved_input(struct Game *game)
+{
+  int i;
+  for (i = 0; i < INPUT_FRAMES; i++) {
+    game->past_input[i] = NO_INPUT;
+  }
+}
+
+void
+handle_input(struct Game *game)
+{
+  game->player->angle = 90;
+
+  switch(game->input) {
+    case SDL_SCANCODE_W:
+      game->player->y += 0.1f;
+      break;
+
+    case SDL_SCANCODE_S:
+      game->player->y -= 0.1f;
+      break;
+
+    case SDL_SCANCODE_A:
+      game->player->angle = 110;
+      game->player->x -= game->speed + 0.25;
+      break;
+
+    case SDL_SCANCODE_D:
+      game->player->angle = 70;
+      game->player->x += game->speed + 0.25;
+      break;
+
+    case SDL_SCANCODE_ESCAPE:
+      game->running = false;
+      break;
+  }
+
+  update_vertices(game->player);
 }
 
 void
 handle_asteroids(struct Polygon *asteroids[], float speed)
 {
-  int i, j;
+  int i;
 
   /* the num asteroids are based on the speed, which increases as time goes */
   int num_asteroids = (int)(speed * 10) + 1;
 
-  for (i = 0; i < num_asteroids; i++) {
+  for (i = 0; i < num_asteroids && i < MAX_ASTEROIDS; i++) {
 
     if (asteroids[i] == NULL) { 
       asteroids[i] = construct_asteroid();
     }
 
-    //asteroids[i]->center.y -= speed;
+    //printf("%d: %f\n", i, speed);
+
     asteroids[i]->y -= speed;
 
     /* if it ain't visible anymore off the bottom, make a new one */
@@ -70,6 +188,10 @@ handle_stars(struct Polygon *stars[], float speed)
 {
   int i;
 
+  /* if speed is less than 0, we're moving backwards */
+  int backwards = speed < 0 ? 1 : 0;
+  int offscreen = false;
+
   /* move slower than asteroids to simluate a parallax effect */
   speed = speed / 3.0f;
   
@@ -80,27 +202,73 @@ handle_stars(struct Polygon *stars[], float speed)
 
     stars[i]->y -= speed;
 
-    /* if it ain't visible anymore, make a new one and set the y above screen */
-    if (below_screen(*stars[i])) {
+    /* if it went below the screen (or above the screen while backwards) */
+    if (below_screen(*stars[i]) || (above_screen(*stars[i]) && backwards)) {
       deconstruct_polygon(stars[i]);
       stars[i] = construct_star();
-      stars[i]->y = 5.0f;
+
+      /* put it below the screen if backwards else above */
+      stars[i]->y = backwards ? -5.0f : 5.0f;
     }
 
     update_vertices(stars[i]);
   }
 }
 
-void 
-construct_all_stars(struct Polygon *stars[])
+void
+display_player(struct Game *game)
 {
-  int i;
-  for (i = 0; i < MAX_STARS; i++) {
-    stars[i] = construct_star();
+  display_triangle(game->graphics.ship_texture, 
+      game->player->x, 
+      game->player->y, 
+      game->player->vertices);
+}
+
+void
+display_asteroids(struct Game *game)
+{
+  int i, j;
+  for (i = 0; i < MAX_ASTEROIDS; i++) {
+    if (game->asteroids[i] == NULL) { continue; }
+
+    display_quad(game->graphics.asteroid_texture, 
+        game->asteroids[i]->x, 
+        game->asteroids[i]->y, 
+        game->asteroids[i]->vertices);
   }
 }
 
+void
+display_stars(struct Game *game)
+{
+  int i, j;
+  for (i = 0; i < MAX_STARS; i++) {
+    if (game->stars[i] == NULL) { continue; }
+
+    display_quad(0, game->stars[i]->x, game->stars[i]->y, 
+        game->stars[i]->vertices);
+  }
+}
+
+void
+display_game(struct Game *game)
+{
+  set_display();
+
+  display_stars(game);
+  display_asteroids(game);
+  display_player(game);
+
+  render(&game->graphics);
+}
+
+
 /* main menu start screen */
+
+/*
+ * TODO:
+ *    Find a way to incorporate the use of main_loop for this nicely.
+ */
 void
 start_screen(struct Game *game)
 {
@@ -145,20 +313,6 @@ start_screen(struct Game *game)
   destroy_vertices_array(logo_vertices, 4);
 }
 
-/* pause until a button is hit */
-void
-pause_screen(SDL_Event *event)
-{
-  while (1) {
-    while (SDL_PollEvent(event)){
-      switch (event->type) {
-        case SDL_KEYDOWN:
-          return;
-      }
-    }
-  }
-}
-
 bool
 player_collision(struct Polygon *asteroids[], struct Polygon  player)
 {
@@ -173,63 +327,172 @@ player_collision(struct Polygon *asteroids[], struct Polygon  player)
   return false;
 }
 
-/* set the game so it can be called to reset at any time */
+/*
+ * The `main loop' of the game abstracted so we can use it for other things
+ * while still keeping our timesteps synchronous. Mix & Match whichever
+ * functions that will be called at the major steps to achieve cool things.
+ *
+ * Accepts NULL for every argument except the restraint.
+ */
 void
-set_game(struct Polygon *player, struct Polygon *asteroids[], float *speed)
+main_loop(struct Game *game, 
+    void (*speed)(struct Game *), 
+    void (*input)(struct Game *), 
+    void (*update)(struct Game *), 
+    void (*restraint)(struct Game *, bool *))
 {
-  player->x =  0.0f;
-  player->y = -3.0f;
-  player->angle = 90;
+  bool looping = true;
 
-  deconstruct_polygon_array(asteroids, MAX_ASTEROIDS);
-  
-  *speed = 0.01f;
-}
+  while (game->running && looping) {
+    game->current_time = SDL_GetTicks();
 
-void
-display_game(struct Game *game)
-{
-  set_display();
+    /* make sure our input state is constantly updated */
+    SDL_PollEvent(&game->event);
 
-  display_stars(game);
-  display_asteroids(game);
-  display_player(game);
+    /* update the speed of the game every second */
+    if (game->current_time - game->speed_time > ONE_SECOND) {
+      game->speed_time = game->current_time;
 
-  render(&game->graphics);
-}
+      if (speed) {
+        speed(game);
+      }
+    }
 
-void
-display_player(struct Game *game)
-{
-  display_triangle(game->graphics.ship_texture, 
-      game->player->x, 
-      game->player->y, 
-      game->player->vertices);
-}
+    /* update the input of the game every 15 frames */
+    if (game->current_time - game->input_time > FIFTEEN_FPS) { 
+      game->input_time = game->current_time;
 
-void
-display_asteroids(struct Game *game)
-{
-  int i, j;
-  for (i = 0; i < MAX_ASTEROIDS; i++) {
-    if (game->asteroids[i] == NULL) { continue; }
+      if (input) {
+        input(game);
+      }
+    }
 
-    display_quad(game->graphics.asteroid_texture, 
-        game->asteroids[i]->x, 
-        game->asteroids[i]->y, 
-        game->asteroids[i]->vertices);
+    /* update the the game every 30 frames */
+    if (game->current_time - game->frame_time > THIRTY_FPS) {
+      game->frame_time = game->current_time;
+
+      if (update) {
+        update(game);
+      }
+    }
+
+    display_game(game);
+
+    /* stop whatever loop we're in (animation, replaying, or the game loop) */
+    restraint(game, &looping);
   }
 }
 
 void
-display_stars(struct Game *game)
+animation_update(struct Game *game)
 {
-  int i, j;
-  for (i = 0; i < MAX_STARS; i++) {
-    if (game->stars[i] == NULL) { continue; }
+  /* move towards the player starting position and don't go over it */
+  if (game->player->y < -3.0f) {
+    game->player->y += 0.05f;
+  }
 
-    display_quad(0, game->stars[i]->x, game->stars[i]->y, 
-        game->stars[i]->vertices);
+  handle_stars(game->stars, game->speed);
+  update_vertices(game->player);
+}
+
+void
+animation_restraint(struct Game *game, bool *loop)
+{
+  static Uint32 time;
+  static bool   start = true;
+
+  /* setup our initial time */
+  if (start) {
+    start = false;
+    time  = SDL_GetTicks();
+  }
+  
+  if (SDL_GetTicks() - time > 3000) {
+    start = true;
+    *loop = false;
+  }
+}
+
+void
+main_update(struct Game *game)
+{
+  handle_input(game);
+  handle_asteroids(game->asteroids, game->speed);
+  handle_stars(game->stars, game->speed);
+}
+
+void
+main_speed(struct Game *game)
+{
+  game->speed += 0.01f;
+}
+
+void
+main_input(struct Game *game)
+{
+  save_input(game, gather_input());
+}
+
+void
+main_restraint(struct Game *game, bool *looping)
+{
+  if (player_collision(game->asteroids, *game->player)) {
+    main_loop(game, replay_speed, replay_input, 
+        replay_update, replay_restraint);
+  }
+}
+
+void
+replay_speed(struct Game *game)
+{
+  game->speed -= 0.01f;
+}
+
+void
+replay_input(struct Game *game)
+{
+  /* set the input from the player's past inputs and move backwards */
+  game->input = game->past_input[game->past_input_frame];
+  game->past_input_frame--;
+
+  /* if the input frame has reach 0, loop it backwards */
+  if (game->past_input_frame < 0) {
+    game->past_input_frame = (INPUT_FRAMES - 1);
+  }
+}
+
+void
+replay_update(struct Game *game)
+{
+  /* like normal except we're moving backwards */
+  handle_input(game);
+  handle_asteroids(game->asteroids, -game->speed);
+  handle_stars(game->stars, -game->speed);
+}
+
+void
+replay_restraint(struct Game *game, bool *looping)
+{
+  static int counter    = 0;
+  static int last_frame = -1;
+
+  /* setup initial counter */
+  if (last_frame < 0) {
+    counter    = 0;
+    last_frame = game->past_input_frame;
+  }
+
+  /* if the input frame has changed */
+  if (last_frame != game->past_input_frame) {
+    last_frame = game->past_input_frame;
+    counter++;
+  }
+
+  /* when all of the past input has been used, discard it and stop */
+  if (counter > INPUT_FRAMES) {
+    reset_saved_input(game);
+    last_frame = -1;
+    *looping   = false;
   }
 }
 
@@ -239,234 +502,4 @@ cleanup_game(struct Game *game)
   SDL_Quit();
   deconstruct_polygon_array(game->asteroids, MAX_ASTEROIDS);
   deconstruct_polygon_array(game->stars,     MAX_STARS);
-}
-
-/*
- * if we are going to 'save' past input from a player and then play it back
- * to them at any given point, we need to make sure we take and use that
- * input in a manageable timestep so that when we go backwards we can 
- * accurately reproduce the movement in time.
- *
- *
- * TODO:
- *    Reverse the input gather so that when the 'input' is played back to the
- *    player it does the opposite of what they input. This simulate going
- *    backwards.
- */
-int
-gather_input()
-{
-  const Uint8 *keystate = SDL_GetKeyboardState(NULL);
-
-  if (keystate[SDL_SCANCODE_W]) {
-    return SDL_SCANCODE_W;
-  }
-
-  if (keystate[SDL_SCANCODE_A]) {
-    return SDL_SCANCODE_A;
-  }
-
-  if (keystate[SDL_SCANCODE_S]) {
-    return SDL_SCANCODE_S;
-  }
-
-  if (keystate[SDL_SCANCODE_D]) {
-    return SDL_SCANCODE_D;
-  }
-
-  if (keystate[SDL_SCANCODE_ESCAPE]) {
-    return SDL_SCANCODE_ESCAPE;
-  }
-
-  return -1;
-}
-
-void
-save_input(struct Game *game, int input) 
-{
-  /* set the of the player */
-  game->input = input;
-
-  /* save the opposite of the player's input so we can 'replay' it */
-  game->past_input_frame = ++game->past_input_frame % 75;
-  game->past_input[game->past_input_frame] = opposite_input(input);
-}
-
-void
-handle_input(struct Game *game)
-{
-  game->player->angle = 90;
-
-  switch(game->input) {
-    case SDL_SCANCODE_W:
-      game->player->y += 0.1f;
-      break;
-
-    case SDL_SCANCODE_S:
-      game->player->y -= 0.1f;
-      break;
-
-    case SDL_SCANCODE_A:
-      game->player->angle = 110;
-      game->player->x -= game->speed + 0.25;
-      break;
-
-    case SDL_SCANCODE_D:
-      game->player->angle = 70;
-      game->player->x += game->speed + 0.25;
-      break;
-
-    case SDL_SCANCODE_ESCAPE:
-      game->running = false;
-      break;
-  }
-
-  update_vertices(game->player);
-}
-
-
-int 
-opposite_input(int input)
-{
-  switch(input) {
-    case SDL_SCANCODE_W:
-      return SDL_SCANCODE_S;
-      break;
-
-    case SDL_SCANCODE_S:
-      return SDL_SCANCODE_W;
-      break;
-
-    case SDL_SCANCODE_A:
-      return SDL_SCANCODE_D;
-      break;
-
-    case SDL_SCANCODE_D:
-      return SDL_SCANCODE_A;
-      break;
-
-    default:
-      return -1;
-  }
-}
-
-void
-animate_player(struct Game *game)
-{
-  int time = 5; /* animate over 5 seconds */
-
-  /*
-   * instead of a destination point, give input like the player would so we can
-   * start handling 'rewinding'. So, since we want to move up at this time we
-   * would just give 5 up inputs to this animation function.
-   *
-   * The same function that handles input by the player can handle input by us
-   * as well.
-   *
-   * For this to work, also, the player needs to be 'spawned' under the screen
-   * too.
-   *
-   * So, all in all, this function should accept some sort of stack object (last
-   * in first out) of input and the game pointer and should pop the stack and 
-   * use that as if the player was inputting it themselves.
-   */
-
-  bool time_left = true;
-
-  Uint32 start_time = game->current_time;
-
-  /* use the same loop as normal, except player cannot interact */
-  while (time_left) {
-    game->current_time = SDL_GetTicks();
-
-    /* keep our times current */
-    if (game->current_time - game->speed_time > ONE_SECOND) {
-      game->speed_time = game->current_time;
-    }
-
-    if (game->current_time - game->input_time > 66) { // double frame time
-      game->input_time = game->current_time;
-    }
-
-    /* after 5 seconds, end loop */
-    if (game->current_time - start_time > 5000) {
-      time_left = false;
-    }
-
-    /* around 30 frames per second */
-    if (game->current_time - game->frame_time > 33) {
-      game->frame_time = game->current_time;
-
-      /* move towards the player starting position and don't go over it */
-      if (game->player->y < -3.0f) {
-        game->player->y += 0.05f;
-      }
-
-      /*
-       * update player's ship making sure it updates every second in accordance
-       * with the time limit. Meaning it better be at the destination in the 5
-       * seconds given.
-       */
-
-      handle_stars(game->stars, game->speed);
-      update_vertices(game->player);
-    }
-
-    set_display();
-    display_player(game);
-    display_stars(game);
-    render(&game->graphics);
-  }
-}
-
-/*
- * move backwards:
- *   need to have asteroids, stars move backwards as well.
- *
- * can use this to animate the player at the beginning perhaps.
- */
-void
-time_animate_player(struct Game *game)
-{
-  int counter = 0;
-
-  /* use the same loop as normal, except player cannot interact */
-  while (counter < INPUT_FRAMES) {
-    game->current_time = SDL_GetTicks();
-
-    /* keep our times current */
-    if (game->current_time - game->speed_time > ONE_SECOND) {
-      game->speed_time = game->current_time;
-    }
-
-    if (game->current_time - game->input_time > FIFTEEN_FPS) {
-      game->input_time = game->current_time;
-
-      /* set the input from the player's past inputs and move backwards */
-      game->input = game->past_input[game->past_input_frame];
-      game->past_input_frame--;
-
-      /* if the input frame has reach 0, loop it backwards */
-      if (game->past_input_frame < 0) {
-        game->past_input_frame = (INPUT_FRAMES - 1);
-      }
-
-      /* another input frame done */
-      counter++;
-    }
-
-    /* around 30 frames per second */
-    if (game->current_time - game->frame_time > THIRTY_FPS) {
-      game->frame_time = game->current_time;
-
-      //handle_stars(game->stars, game->speed);
-      handle_input(game);
-      update_vertices(game->player);
-    }
-
-    set_display();
-    display_player(game);
-    display_stars(game);
-    render(&game->graphics);
-  }
 }

@@ -241,6 +241,12 @@ below_screen(struct Polygon p)
   return (p.y < -Y_LENGTH);
 }
 
+bool
+above_screen(struct Polygon p)
+{
+  return (p.y > Y_LENGTH);
+}
+
 void
 deconstruct_polygon_array(struct Polygon *p[], int max)
 {
