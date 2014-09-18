@@ -20,4 +20,4 @@ ${EXECUTABLE}: ${OBJECTS}
 	${CC} -Wall -o $@ src/libSOIL.a ${OBJECTS} ${LIBRARIES} ${FRAMEWORKS}
 
 clean:
-	rm -f ${OBJDIR}/*.o fast
+	rm -f ${OBJDIR}/*.o ${EXECUTABLE}

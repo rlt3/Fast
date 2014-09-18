@@ -29,12 +29,6 @@ initialize_game(struct Game *game)
   /* preset the input to 'nothing' */
   reset_saved_input(game);
 
-  /* the start screen */
-  start_screen(game);
-  
-  /* animate player to the starting position */
-  main_loop(game, NULL, NULL, animation_update, animation_restraint);
-
   return 0;
 }
 
@@ -169,8 +163,6 @@ handle_asteroids(struct Polygon *asteroids[], float speed)
       asteroids[i] = construct_asteroid();
     }
 
-    //printf("%d: %f\n", i, speed);
-
     asteroids[i]->y -= speed;
 
     /* if it ain't visible anymore off the bottom, make a new one */
@@ -251,66 +243,11 @@ display_stars(struct Game *game)
 }
 
 void
-display_game(struct Game *game)
+display_essentials(struct Game *game)
 {
-  set_display();
-
   display_stars(game);
   display_asteroids(game);
   display_player(game);
-
-  render(&game->graphics);
-}
-
-
-/* main menu start screen */
-
-/*
- * TODO:
- *    Find a way to incorporate the use of main_loop for this nicely.
- */
-void
-start_screen(struct Game *game)
-{
-  bool pre_game = true;
-
-  float **logo_vertices = make_vertices_array(4);
-  
-  logo_vertices[0][X] =  4.0;
-  logo_vertices[0][Y] =  2.0;
-  logo_vertices[1][X] = -4.0;
-  logo_vertices[1][Y] =  2.0;
-  logo_vertices[2][X] = -4.0;
-  logo_vertices[2][Y] = -2.0;
-  logo_vertices[3][X] =  4.0;
-  logo_vertices[3][Y] = -2.0;
-
-  while (pre_game) {
-    game->current_time = SDL_GetTicks();
-
-    while (SDL_PollEvent(&game->event)){
-      switch (game->event.type) {
-        case SDL_KEYDOWN:
-          pre_game = false;
-      }
-    }
-
-    /* around 30 frames per second */
-    if (game->current_time - game->frame_time > THIRTY_FPS) {
-      game->frame_time = game->current_time;
-
-      handle_stars(game->stars, game->speed);
-    }
-
-    set_display();
-    display_stars(game);
-
-    display_quad(game->graphics.main_screen_texture, 0, 0, logo_vertices);
-
-    render(&game->graphics);
-  }
-
-  destroy_vertices_array(logo_vertices, 4);
 }
 
 bool
@@ -339,6 +276,7 @@ main_loop(struct Game *game,
     void (*speed)(struct Game *), 
     void (*input)(struct Game *), 
     void (*update)(struct Game *), 
+    void (*display)(struct Game *), 
     void (*restraint)(struct Game *, bool *))
 {
   bool looping = true;
@@ -376,10 +314,69 @@ main_loop(struct Game *game,
       }
     }
 
-    display_game(game);
+    /* set up the display for drawing */
+    set_display();
+
+    /* draw the player, stars, and asteroids */
+    display_essentials(game);
+    
+    /* draw whatever else if something was provided */
+    if (display) {
+      display(game);
+    }
+    
+    render(&game->graphics);
 
     /* stop whatever loop we're in (animation, replaying, or the game loop) */
     restraint(game, &looping);
+  }
+}
+
+float**
+logo_vertices()
+{
+  static bool created = false;
+  static float **logo_vertices;
+
+  /* return the same logo vertices every time */
+  if (!created) {
+    logo_vertices = make_vertices_array(4);
+
+    logo_vertices[0][X] =  4.0;
+    logo_vertices[0][Y] =  2.0;
+    logo_vertices[1][X] = -4.0;
+    logo_vertices[1][Y] =  2.0;
+    logo_vertices[2][X] = -4.0;
+    logo_vertices[2][Y] = -2.0;
+    logo_vertices[3][X] =  4.0;
+    logo_vertices[3][Y] = -2.0;
+
+    created = true;
+  }
+  
+  return logo_vertices;
+}
+
+void
+start_update(struct Game *game)
+{
+  handle_stars(game->stars, game->speed);
+}
+
+void
+start_display(struct Game *game)
+{
+  display_quad(game->graphics.main_screen_texture, 0, 0, logo_vertices());
+}
+
+void
+start_restraint(struct Game *game, bool *loop)
+{
+  while (SDL_PollEvent(&game->event)){
+    switch (game->event.type) {
+      case SDL_KEYDOWN:
+        *loop = false;
+    }
   }
 }
 
@@ -438,7 +435,7 @@ main_restraint(struct Game *game, bool *looping)
 {
   if (player_collision(game->asteroids, *game->player)) {
     main_loop(game, replay_speed, replay_input, 
-        replay_update, replay_restraint);
+        replay_update, replay_display, replay_restraint);
   }
 }
 
@@ -471,6 +468,12 @@ replay_update(struct Game *game)
 }
 
 void
+replay_display(struct Game *game)
+{
+  display_quad(game->graphics.collision_texture, 0, 0, logo_vertices());
+}
+
+void
 replay_restraint(struct Game *game, bool *looping)
 {
   static int counter    = 0;
@@ -500,6 +503,8 @@ void
 cleanup_game(struct Game *game)
 {
   SDL_Quit();
+  destroy_vertices_array(logo_vertices(), 4);
+  deconstruct_polygon(game->player);
   deconstruct_polygon_array(game->asteroids, MAX_ASTEROIDS);
   deconstruct_polygon_array(game->stars,     MAX_STARS);
 }

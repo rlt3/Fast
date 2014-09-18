@@ -22,7 +22,6 @@
 /*
  * Handle the state of the game including events such as input or collision.
  */
-
 struct Game {
   struct Polygon *stars[MAX_STARS];
   struct Polygon *asteroids[MAX_STARS];
@@ -64,21 +63,27 @@ void handle_stars(struct Polygon *stars[], float speed);
 void display_player(struct Game *game);
 void display_asteroids(struct Game *game);
 void display_stars(struct Game *game);
-void display_game(struct Game *game);
-
-void start_screen(struct Game *game);
+void display_essentials(struct Game *game);
 
 bool player_collision(struct Polygon *asteroids[], 
          struct Polygon player);
+
+/* create and always return the same static logo_vertices */
+float** logo_vertices();
 
 /* main loop used for animation, replaying, and the main loop */
 void main_loop(struct Game *game, 
         void (*speed)(struct Game *), 
         void (*input)(struct Game *), 
         void (*update)(struct Game *), 
+        void (*display)(struct Game *), 
         void (*restraint)(struct Game *, bool *));
 
 /* the functions which are passed into the main loop */
+void start_update(struct Game *game);
+void start_display(struct Game *game);
+void start_restraint(struct Game *game, bool *loop);
+
 void animation_update(struct Game *game);
 void animation_restraint(struct Game *game, bool *loop);
 
@@ -90,6 +95,7 @@ void main_restraint(struct Game *game, bool *looping);
 void replay_speed(struct Game *game);
 void replay_input(struct Game *game);
 void replay_update(struct Game *game);
+void replay_display(struct Game *game);
 void replay_restraint(struct Game *game, bool *looping);
 
 void cleanup_game(struct Game *game);

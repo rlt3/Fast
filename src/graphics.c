@@ -55,6 +55,12 @@ Display_SetViewport(int width, int height)
   return 1;
 }
 
+/*
+ * TODO:
+ *    Refactor the SOIL function into a singular function we can
+ *    reuse.
+ */
+
 int
 load_textures(struct Graphics *graphics)
 {
@@ -72,7 +78,7 @@ load_textures(struct Graphics *graphics)
   }
 
   graphics->ship_texture = SOIL_load_OGL_texture("ship.png",
-      SOIL_LOAD_RGBA,
+      SOIL_LOAD_AUTO,
       SOIL_CREATE_NEW_ID,
       SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | 
       SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT);
@@ -84,14 +90,25 @@ load_textures(struct Graphics *graphics)
   }
 
   graphics->main_screen_texture = SOIL_load_OGL_texture("fast.png",
-      //SOIL_LOAD_AUTO,
-      SOIL_LOAD_RGBA,
+      SOIL_LOAD_AUTO,
       SOIL_CREATE_NEW_ID,
       SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | 
       SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT);
 
   /* check for an error during the load process */
   if( 0 == graphics->main_screen_texture ) {
+    printf( "SOIL loading error: '%s'\n", SOIL_last_result() );
+    return 1;
+  }
+
+  graphics->collision_texture = SOIL_load_OGL_texture("collision.png",
+      SOIL_LOAD_AUTO,
+      SOIL_CREATE_NEW_ID,
+      SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | 
+      SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT);
+
+  /* check for an error during the load process */
+  if( 0 == graphics->collision_texture ) {
     printf( "SOIL loading error: '%s'\n", SOIL_last_result() );
     return 1;
   }

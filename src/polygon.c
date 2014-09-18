@@ -23,7 +23,7 @@ construct_player()
 
   *p = (struct Polygon) {
     .x      = 0.0f,
-    .y      = -5.0f,
+    .y      = -5.5f,
     .radius = 1.0f,
     .angle  = 90,
     .sides  = PLAYER_ANGLES

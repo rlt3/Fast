@@ -23,6 +23,7 @@ struct Graphics {
   SDL_RendererInfo  renderer_info;
 
   GLuint            main_screen_texture;
+  GLuint            collision_texture;
   GLuint            ship_texture;
   GLuint            asteroid_texture;
 };
