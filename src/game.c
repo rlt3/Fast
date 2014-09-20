@@ -14,14 +14,15 @@ initialize_game(struct Game *game)
   /* make all the stars now so they show up immediately */
   construct_all_stars(game->stars);
 
-  game->player     = construct_player();
-  game->running    = true;
-  game->speed      = BASE_SPEED;
+  game->player   = construct_player();
+  game->running  = true;
+  game->speed    = BASE_SPEED;
 
   game->current_time = SDL_GetTicks();
   game->frame_time   = game->current_time;
   game->speed_time   = game->current_time;
   game->input_time   = game->current_time;
+  game->level_time   = game->current_time;
 
   /* set input_frames so it rolls over to 0 on the first loop */
   game->past_input_frame  = (INPUT_FRAMES - 1);
@@ -104,7 +105,7 @@ save_input(struct Game *game, int input)
   game->input = input;
 
   /* save the opposite of the player's input so we can 'replay' it */
-  game->past_input_frame = ++game->past_input_frame % 75;
+  game->past_input_frame = ++game->past_input_frame % INPUT_FRAMES;
   game->past_input[game->past_input_frame] = opposite_input(input);
 }
 
@@ -149,26 +150,47 @@ handle_input(struct Game *game)
   update_vertices(game->player);
 }
 
+/*
+ * TODO:
+ *    Asteroids, after rewinding time, seem to appear at random. This occurs
+ *    even if the player has already 'seen' that part of the game. So, it seems
+ *    broken.
+ *
+ *    The problem lies in our update tick which probably shouldn't happen
+ *    during our replay loop (so abstract it into a function) and also 'rewind'
+ *    the time (our Uint32 variables) so it takes a couple of real seconds to
+ *    create anything new.
+ *
+ *    Will probably need to set the "level_time" variable to `now' whenever the
+ *    restraint for replaying ends.
+ */
+
 void
 handle_asteroids(struct Polygon *asteroids[], float speed)
 {
   int i;
 
-  /* the num asteroids are based on the speed, which increases as time goes */
-  int num_asteroids = (int)(speed * 10) + 1;
+  int backwards = (speed < 0 ? 1 : 0);
 
-  for (i = 0; i < num_asteroids && i < MAX_ASTEROIDS; i++) {
-
-    if (asteroids[i] == NULL) { 
-      asteroids[i] = construct_asteroid();
-    }
+  for (i = 0; i < MAX_ASTEROIDS; i++) {
+    if (asteroids[i] == NULL) { continue; }
 
     asteroids[i]->y -= speed;
 
-    /* if it ain't visible anymore off the bottom, make a new one */
-    if (below_screen(*asteroids[i])) {
-      deconstruct_polygon(asteroids[i]);
-      asteroids[i] = construct_asteroid();
+    /* if it is below the screen and we're not going backwards */
+    if (below_screen(*asteroids[i]) && !backwards) {
+
+      /* set the time it first went below the screen */
+      if (asteroids[i]->first_below == 0) {
+        asteroids[i]->first_below = SDL_GetTicks();
+      }
+
+      /* once it has been under 5 seconds, make a new one */
+      if (SDL_GetTicks() - asteroids[i]->first_below > 5000) {
+
+        deconstruct_polygon(asteroids[i]);
+        asteroids[i] = construct_asteroid();
+      }
     }
 
     update_vertices(asteroids[i]);
@@ -275,6 +297,7 @@ void
 main_loop(struct Game *game, 
     void (*speed)(struct Game *), 
     void (*input)(struct Game *), 
+    void (*level)(struct Game *), 
     void (*update)(struct Game *), 
     void (*display)(struct Game *), 
     void (*restraint)(struct Game *, bool *))
@@ -293,6 +316,16 @@ main_loop(struct Game *game,
 
       if (speed) {
         speed(game);
+      }
+    }
+
+    /* update the level of the game every 1.5 seconds */
+    if (game->current_time - game->level_time > 3500) {
+      printf("%u - %u < 3500\n", game->current_time, game->level_time);
+      game->level_time = game->current_time;
+
+      if (level) {
+        level(game);
       }
     }
 
@@ -411,6 +444,20 @@ animation_restraint(struct Game *game, bool *loop)
 }
 
 void
+main_level(struct Game *game)
+{
+  /* find the next free spot and make an asteroids */
+  int i;
+  for (i = 0; i < MAX_ASTEROIDS; i++) {
+    if (game->asteroids[i] == NULL) {
+      game->asteroids[i] = construct_asteroid();
+      game->asteroids[i]->first_below = 0;
+      break;
+    }
+  }
+}
+
+void
 main_update(struct Game *game)
 {
   handle_input(game);
@@ -434,7 +481,7 @@ void
 main_restraint(struct Game *game, bool *looping)
 {
   if (player_collision(game->asteroids, *game->player)) {
-    main_loop(game, replay_speed, replay_input, 
+    main_loop(game, replay_speed, replay_input, NULL,
         replay_update, replay_display, replay_restraint);
   }
 }
@@ -495,6 +542,7 @@ replay_restraint(struct Game *game, bool *looping)
   if (counter > INPUT_FRAMES) {
     reset_saved_input(game);
     last_frame = -1;
+    game->level_time = SDL_GetTicks();
     *looping   = false;
   }
 }

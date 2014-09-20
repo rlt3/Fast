@@ -32,6 +32,7 @@ struct Polygon {
   int   angle;
   int   sides;
 
+  long long int first_below;
 };
 
 struct Polygon* construct_player();

@@ -7,7 +7,7 @@
 #include "graphics.h"
 #include "polygon.h"
 
-#define MAX_ASTEROIDS    16
+#define MAX_ASTEROIDS    32
 #define MAX_STARS        32
 
 #define BASE_SPEED       0.01f
@@ -15,8 +15,8 @@
 #define THIRTY_FPS       (ONE_SECOND/30)
 #define FIFTEEN_FPS      (ONE_SECOND/15)
 
-/* keep input for last 5 seconds */
-#define INPUT_FRAMES     75
+/* keep input for last 3 seconds */
+#define INPUT_FRAMES     45
 #define NO_INPUT         -1
 
 /*
@@ -37,6 +37,7 @@ struct Game {
   Uint32          frame_time;
   Uint32          speed_time;
   Uint32          input_time;
+  Uint32          level_time;
 
   int             input;
 
@@ -75,6 +76,7 @@ float** logo_vertices();
 void main_loop(struct Game *game, 
         void (*speed)(struct Game *), 
         void (*input)(struct Game *), 
+        void (*level)(struct Game *), 
         void (*update)(struct Game *), 
         void (*display)(struct Game *), 
         void (*restraint)(struct Game *, bool *));
@@ -89,6 +91,7 @@ void animation_restraint(struct Game *game, bool *loop);
 
 void main_speed(struct Game *game);
 void main_input(struct Game *game);
+void main_level(struct Game *game);
 void main_update(struct Game *game);
 void main_restraint(struct Game *game, bool *looping);
 
