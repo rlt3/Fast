@@ -54,6 +54,8 @@ construct_player()
 struct Polygon *
 construct_asteroid() 
 {
+  printf("%u\n", SDL_GetTicks());
+
   struct Polygon *p = (struct Polygon*) malloc(sizeof(struct Polygon));
 
   if (p == NULL) {
@@ -245,6 +247,15 @@ bool
 above_screen(struct Polygon p)
 {
   return (p.y > Y_LENGTH);
+}
+
+bool
+polygon_visible(struct Polygon p)
+{
+  return (p.y <  Y_LENGTH && 
+          p.y > -Y_LENGTH &&
+          p.x <  X_LENGTH &&
+          p.x > -X_LENGTH);
 }
 
 void

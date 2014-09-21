@@ -23,6 +23,7 @@ initialize_game(struct Game *game)
   game->speed_time   = game->current_time;
   game->input_time   = game->current_time;
   game->level_time   = game->current_time;
+  game->replay_time   = game->current_time;
 
   /* set input_frames so it rolls over to 0 on the first loop */
   game->past_input_frame  = (INPUT_FRAMES - 1);
@@ -151,24 +152,25 @@ handle_input(struct Game *game)
 }
 
 /*
- * TODO:
- *    Asteroids, after rewinding time, seem to appear at random. This occurs
- *    even if the player has already 'seen' that part of the game. So, it seems
- *    broken.
+ * As the game increased in duration, there needs to be some amount of asteroids
+ * always on screen at any given time. So, when the game begins there shall be
+ * one and then two in close succession. When those have gone beyond the screen
+ * hold onto that data (for replaying), but create new asteroids as well.
  *
- *    The problem lies in our update tick which probably shouldn't happen
- *    during our replay loop (so abstract it into a function) and also 'rewind'
- *    the time (our Uint32 variables) so it takes a couple of real seconds to
- *    create anything new.
+ * This will have to be done through checking the current `level' of the game,
+ * which is the number of asteroids available, versus the amount of currently
+ * visible asteroids. So, if the level is 5 and there are 3 asteroids below
+ * the screen, then there should be 3 asteroids created to fill that void.
  *
- *    Will probably need to set the "level_time" variable to `now' whenever the
- *    restraint for replaying ends.
+ * Basically, as asteroids move below the screen, an asteroid should be created
+ * in its place, but the amount of asteroids at any one time on screen should be
+ * predictable.
  */
 
 void
 handle_asteroids(struct Polygon *asteroids[], float speed)
 {
-  int i;
+  int i, j;
 
   int backwards = (speed < 0 ? 1 : 0);
 
@@ -176,24 +178,48 @@ handle_asteroids(struct Polygon *asteroids[], float speed)
     if (asteroids[i] == NULL) { continue; }
 
     asteroids[i]->y -= speed;
+    update_vertices(asteroids[i]);
+
+    /* if it is on screen and we're going backwards */
+    if (polygon_visible(*asteroids[i]) && backwards) {
+
+      /* if the asteroid has come back above screen, reset its time */
+      if (asteroids[i]->below_time != 0) {
+        asteroids[i]->below_time = 0;
+      }
+    }
 
     /* if it is below the screen and we're not going backwards */
     if (below_screen(*asteroids[i]) && !backwards) {
 
-      /* set the time it first went below the screen */
+      /* if the asteroid is coming in fresh, set its timer */
+      if (asteroids[i]->below_time == 0) {
+        asteroids[i]->below_time = SDL_GetTicks();
+      }
+
+      /* if it's the first time below screen, make a new asteroid */
       if (asteroids[i]->first_below == 0) {
-        asteroids[i]->first_below = SDL_GetTicks();
+        asteroids[i]->first_below = 1;
+
+        for (j = 0; j < MAX_ASTEROIDS; j++) {
+          if (asteroids[j] == NULL) {
+            asteroids[j] = construct_asteroid();
+            break;
+          }
+        }
       }
 
       /* once it has been under 5 seconds, make a new one */
-      if (SDL_GetTicks() - asteroids[i]->first_below > 5000) {
+      if (SDL_GetTicks() - asteroids[i]->below_time > 5000) {
 
+        /* 
+         * only make asteroids in one spot so that we can attach time to its
+         * creation and it appears deterministic rather than random
+         */
         deconstruct_polygon(asteroids[i]);
-        asteroids[i] = construct_asteroid();
+        asteroids[i] = NULL;
       }
     }
-
-    update_vertices(asteroids[i]);
   }
 }
 
@@ -319,9 +345,13 @@ main_loop(struct Game *game,
       }
     }
 
-    /* update the level of the game every 1.5 seconds */
-    if (game->current_time - game->level_time > 3500) {
-      printf("%u - %u < 3500\n", game->current_time, game->level_time);
+    /* 
+     * add a new asteroids to be created every 1.5 seconds. after replaying
+     * do not create another asteroid for 3 seconds
+     */
+    //if ((game->current_time - game->level_time > 8000) &&
+    //    (game->current_time - game->replay_time > 3000)) {
+    if (game->current_time - game->level_time > 8000) {
       game->level_time = game->current_time;
 
       if (level) {
@@ -528,6 +558,7 @@ replay_restraint(struct Game *game, bool *looping)
 
   /* setup initial counter */
   if (last_frame < 0) {
+    printf("Starting replay @ %u\n", SDL_GetTicks());
     counter    = 0;
     last_frame = game->past_input_frame;
   }
@@ -540,9 +571,11 @@ replay_restraint(struct Game *game, bool *looping)
 
   /* when all of the past input has been used, discard it and stop */
   if (counter > INPUT_FRAMES) {
+    printf("Ending replay @ %u\n", SDL_GetTicks());
     reset_saved_input(game);
     last_frame = -1;
     game->level_time = SDL_GetTicks();
+    game->replay_time = game->level_time;
     *looping   = false;
   }
 }

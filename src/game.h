@@ -38,6 +38,7 @@ struct Game {
   Uint32          speed_time;
   Uint32          input_time;
   Uint32          level_time;
+  Uint32          replay_time;
 
   int             input;
 

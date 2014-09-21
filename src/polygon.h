@@ -32,7 +32,9 @@ struct Polygon {
   int   angle;
   int   sides;
 
-  long long int first_below;
+  /* the time it has spent below screen and whether it is first time below */
+  bool first_below;
+  long long int below_time;
 };
 
 struct Polygon* construct_player();
