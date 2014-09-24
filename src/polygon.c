@@ -54,8 +54,6 @@ construct_player()
 struct Polygon *
 construct_asteroid() 
 {
-  printf("%u\n", SDL_GetTicks());
-
   struct Polygon *p = (struct Polygon*) malloc(sizeof(struct Polygon));
 
   if (p == NULL) {

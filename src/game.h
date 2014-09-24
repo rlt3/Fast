@@ -38,7 +38,6 @@ struct Game {
   Uint32          speed_time;
   Uint32          input_time;
   Uint32          level_time;
-  Uint32          replay_time;
 
   int             input;
 
@@ -72,6 +71,9 @@ bool player_collision(struct Polygon *asteroids[],
 
 /* create and always return the same static logo_vertices */
 float** logo_vertices();
+
+/* find first empty spot and create an asteroid */
+void add_asteroid(struct Polygon *asteroid[]);
 
 /* main loop used for animation, replaying, and the main loop */
 void main_loop(struct Game *game, 
