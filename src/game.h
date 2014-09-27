@@ -31,6 +31,7 @@ struct Game {
 
   bool            running;
   float           speed;
+  int             fuel;
 
   Uint32          current_time;
 
@@ -48,6 +49,7 @@ struct Game {
 };
 
 int  initialize_game(struct Game *game);
+void set_game(struct Game *game);
 void construct_all_stars(struct Polygon *stars[]);
 
 /* gather input, opposite it for replay and reset when done */
@@ -69,8 +71,8 @@ void display_essentials(struct Game *game);
 bool player_collision(struct Polygon *asteroids[], 
          struct Polygon player);
 
-/* create and always return the same static logo_vertices */
-float** logo_vertices();
+/* create and always return the same static screen vertices */
+float** screen_vertices();
 
 /* find first empty spot and create an asteroid */
 void add_asteroid(struct Polygon *asteroid[]);

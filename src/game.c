@@ -14,9 +14,25 @@ initialize_game(struct Game *game)
   /* make all the stars now so they show up immediately */
   construct_all_stars(game->stars);
 
+  set_game(game);
+
+  return 0;
+}
+
+void
+set_game(struct Game *game)
+{
+  /* remove player if it exists */
+  if (game->player != NULL) {
+    deconstruct_polygon(game->player);
+  }
+
+  deconstruct_polygon_array(game->asteroids, MAX_ASTEROIDS);
+
   game->player   = construct_player();
   game->running  = true;
   game->speed    = BASE_SPEED;
+  game->fuel     = 3;
 
   game->current_time = SDL_GetTicks();
   game->frame_time   = game->current_time;
@@ -29,8 +45,6 @@ initialize_game(struct Game *game)
 
   /* preset the input to 'nothing' */
   reset_saved_input(game);
-
-  return 0;
 }
 
 void 
@@ -379,29 +393,34 @@ main_loop(struct Game *game,
   }
 }
 
+/* 
+ * return the vertices for a rectangle the size of the screen. this is for
+ * displaying overlays like the main menu screen/pause screen/interface for
+ * the game using one set vertices.
+ */
 float**
-logo_vertices()
+screen_vertices()
 {
   static bool created = false;
-  static float **logo_vertices;
+  static float **screen_vertices;
 
   /* return the same logo vertices every time */
   if (!created) {
-    logo_vertices = make_vertices_array(4);
+    screen_vertices = make_vertices_array(4);
 
-    logo_vertices[0][X] =  4.0;
-    logo_vertices[0][Y] =  2.0;
-    logo_vertices[1][X] = -4.0;
-    logo_vertices[1][Y] =  2.0;
-    logo_vertices[2][X] = -4.0;
-    logo_vertices[2][Y] = -2.0;
-    logo_vertices[3][X] =  4.0;
-    logo_vertices[3][Y] = -2.0;
+    screen_vertices[0][X] =  6.0;
+    screen_vertices[0][Y] =  4.0;
+    screen_vertices[1][X] = -6.0;
+    screen_vertices[1][Y] =  4.0;
+    screen_vertices[2][X] = -6.0;
+    screen_vertices[2][Y] = -4.0;
+    screen_vertices[3][X] =  6.0;
+    screen_vertices[3][Y] = -4.0;
 
     created = true;
   }
   
-  return logo_vertices;
+  return screen_vertices;
 }
 
 /* Find the first empty spot and create an asteroid */
@@ -418,6 +437,24 @@ add_asteroid(struct Polygon *asteroids[])
 }
 
 void
+end_restraint(struct Game *game, bool *loop)
+{
+  while (SDL_PollEvent(&game->event)){
+    switch (game->event.type) {
+      case SDL_KEYDOWN:
+        /* reset the game to its original point */
+        set_game(game);
+
+        /* animate player to the starting position */
+        main_loop(game, NULL, NULL, NULL, animation_update, NULL, 
+            animation_restraint);
+
+        *loop = false;
+    }
+  }
+}
+
+void
 start_update(struct Game *game)
 {
   handle_stars(game->stars, game->speed);
@@ -426,7 +463,7 @@ start_update(struct Game *game)
 void
 start_display(struct Game *game)
 {
-  display_quad(game->graphics.main_screen_texture, 0, 0, logo_vertices());
+  display_quad(game->graphics.main_screen_texture, 0, 0, screen_vertices());
 }
 
 void
@@ -500,9 +537,16 @@ void
 main_restraint(struct Game *game, bool *looping)
 {
   if (player_collision(game->asteroids, *game->player)) {
-    main_loop(game, replay_speed, replay_input, NULL,
-        replay_update, replay_display, replay_restraint);
-  }
+    if (game->fuel > 0) {
+      /* if there was collision and there's fuel to rewind */
+      game->fuel--;
+      main_loop(game, replay_speed, replay_input, NULL,
+          replay_update, replay_display, replay_restraint);
+    } else {
+      /* else show end screen and give choice to continue */
+      main_loop(game, NULL, NULL, NULL, NULL, NULL, end_restraint);
+    }
+  } 
 }
 
 /* 
@@ -542,7 +586,7 @@ replay_update(struct Game *game)
 void
 replay_display(struct Game *game)
 {
-  display_quad(game->graphics.collision_texture, 0, 0, logo_vertices());
+  display_quad(game->graphics.collision_texture, 0, 0, screen_vertices());
 }
 
 void
@@ -578,7 +622,7 @@ void
 cleanup_game(struct Game *game)
 {
   SDL_Quit();
-  destroy_vertices_array(logo_vertices(), 4);
+  destroy_vertices_array(screen_vertices(), 4);
   deconstruct_polygon(game->player);
   deconstruct_polygon_array(game->asteroids, MAX_ASTEROIDS);
   deconstruct_polygon_array(game->stars,     MAX_STARS);
