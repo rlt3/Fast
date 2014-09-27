@@ -37,7 +37,6 @@ set_game(struct Game *game)
   game->current_time = SDL_GetTicks();
   game->frame_time   = game->current_time;
   game->speed_time   = game->current_time;
-  game->input_time   = game->current_time;
   game->level_time   = game->current_time;
 
   /* set input_frames so it rolls over to 0 on the first loop */
@@ -109,18 +108,6 @@ opposite_input(int input)
     default:
       return NO_INPUT;
   }
-}
-
-/* save the current input and to our past_input array */
-void
-save_input(struct Game *game, int input) 
-{
-  /* set the of the player */
-  game->input = input;
-
-  /* save the opposite of the player's input so we can 'replay' it */
-  game->past_input_frame = ++game->past_input_frame % INPUT_FRAMES;
-  game->past_input[game->past_input_frame] = opposite_input(input);
 }
 
 void
@@ -317,7 +304,6 @@ player_collision(struct Polygon *asteroids[], struct Polygon  player)
 void
 main_loop(struct Game *game, 
     void (*speed)(struct Game *), 
-    void (*input)(struct Game *), 
     void (*level)(struct Game *), 
     void (*update)(struct Game *), 
     void (*display)(struct Game *), 
@@ -354,15 +340,6 @@ main_loop(struct Game *game,
 
       if (level) {
         level(game);
-      }
-    }
-
-    /* update the input of the game every 15 frames */
-    if (game->current_time - game->input_time > FIFTEEN_FPS) { 
-      game->input_time = game->current_time;
-
-      if (input) {
-        input(game);
       }
     }
 
@@ -446,7 +423,7 @@ end_restraint(struct Game *game, bool *loop)
         set_game(game);
 
         /* animate player to the starting position */
-        main_loop(game, NULL, NULL, NULL, animation_update, NULL, 
+        main_loop(game, NULL, NULL, animation_update, NULL, 
             animation_restraint);
 
         *loop = false;
@@ -516,7 +493,15 @@ main_level(struct Game *game)
 void
 main_update(struct Game *game)
 {
+  /* set the of the player */
+  game->input = gather_input();
+
   handle_input(game);
+
+  /* save the opposite of the player's input so we can 'replay' it */
+  game->past_input_frame = ++game->past_input_frame % INPUT_FRAMES;
+  game->past_input[game->past_input_frame] = opposite_input(game->input);
+
   handle_asteroids(game->asteroids, game->speed);
   handle_stars(game->stars, game->speed);
 }
@@ -528,23 +513,17 @@ main_speed(struct Game *game)
 }
 
 void
-main_input(struct Game *game)
-{
-  save_input(game, gather_input());
-}
-
-void
 main_restraint(struct Game *game, bool *looping)
 {
   if (player_collision(game->asteroids, *game->player)) {
     if (game->fuel > 0) {
       /* if there was collision and there's fuel to rewind */
       game->fuel--;
-      main_loop(game, replay_speed, replay_input, NULL,
-          replay_update, replay_display, replay_restraint);
+      main_loop(game, replay_speed, NULL, replay_update, replay_display, 
+          replay_restraint);
     } else {
       /* else show end screen and give choice to continue */
-      main_loop(game, NULL, NULL, NULL, NULL, NULL, end_restraint);
+      main_loop(game, NULL, NULL, NULL, NULL, end_restraint);
     }
   } 
 }
@@ -553,16 +532,22 @@ main_restraint(struct Game *game, bool *looping)
  * TODO:
  *    Make speed rewind smoothly and then after replaying, speed up gracefully
  *    back to where it was, giving player time to adapt to rewinding.
+ *
+ *    Also, speed needs to match the speed of the asteroid as it was when it was
+ *    moving downwards normally so the player's input in replay matches up to 
+ *    the asteroid. 
+ *
+ *    Since we increment by 0.01, we need to decrement by 0.01 in reverse so
+ *    that everything is in lockstep.
  */
 void
 replay_speed(struct Game *game)
 {
-  //game->speed -= 0.01f;
-  game->speed -= 0.03f;
+  game->speed -= 0.01f;
 }
 
 void
-replay_input(struct Game *game)
+replay_update(struct Game *game)
 {
   /* set the input from the player's past inputs and move backwards */
   game->input = game->past_input[game->past_input_frame];
@@ -572,11 +557,7 @@ replay_input(struct Game *game)
   if (game->past_input_frame < 0) {
     game->past_input_frame = (INPUT_FRAMES - 1);
   }
-}
 
-void
-replay_update(struct Game *game)
-{
   /* like normal except we're moving backwards */
   handle_input(game);
   handle_asteroids(game->asteroids, -game->speed);

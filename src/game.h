@@ -16,7 +16,7 @@
 #define FIFTEEN_FPS      (ONE_SECOND/15)
 
 /* keep input for last 3 seconds */
-#define INPUT_FRAMES     45
+#define INPUT_FRAMES     90
 #define NO_INPUT         -1
 
 /*
@@ -55,7 +55,6 @@ void construct_all_stars(struct Polygon *stars[]);
 /* gather input, opposite it for replay and reset when done */
 int  gather_input();
 int  opposite_input(int input);
-void save_input(struct Game * game, int input);
 void reset_saved_input(struct Game *game);
 
 /* handle the objects of our game */
@@ -80,7 +79,6 @@ void add_asteroid(struct Polygon *asteroid[]);
 /* main loop used for animation, replaying, and the main loop */
 void main_loop(struct Game *game, 
         void (*speed)(struct Game *), 
-        void (*input)(struct Game *), 
         void (*level)(struct Game *), 
         void (*update)(struct Game *), 
         void (*display)(struct Game *), 
@@ -91,17 +89,17 @@ void start_update(struct Game *game);
 void start_display(struct Game *game);
 void start_restraint(struct Game *game, bool *loop);
 
+void end_restraint(struct Game *game, bool *loop);
+
 void animation_update(struct Game *game);
 void animation_restraint(struct Game *game, bool *loop);
 
 void main_speed(struct Game *game);
-void main_input(struct Game *game);
 void main_level(struct Game *game);
 void main_update(struct Game *game);
 void main_restraint(struct Game *game, bool *looping);
 
 void replay_speed(struct Game *game);
-void replay_input(struct Game *game);
 void replay_update(struct Game *game);
 void replay_display(struct Game *game);
 void replay_restraint(struct Game *game, bool *looping);
