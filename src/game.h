@@ -33,12 +33,11 @@ struct Game {
   float           speed;
   int             fuel;
 
-  Uint32          current_time;
-
-  Uint32          frame_time;
-  Uint32          speed_time;
-  Uint32          input_time;
-  Uint32          level_time;
+  long int        current_time;
+  long int        frame_time;
+  long int        speed_time;
+  long int        input_time;
+  long int        level_time;
 
   int             input;
 

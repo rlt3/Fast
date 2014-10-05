@@ -34,7 +34,7 @@ set_game(struct Game *game)
   game->speed    = BASE_SPEED;
   game->fuel     = 3;
 
-  game->current_time = SDL_GetTicks();
+  game->current_time = (long int) SDL_GetTicks();
   game->frame_time   = game->current_time;
   game->speed_time   = game->current_time;
   game->level_time   = game->current_time;
@@ -312,7 +312,7 @@ main_loop(struct Game *game,
   bool looping = true;
 
   while (game->running && looping) {
-    game->current_time = SDL_GetTicks();
+    game->current_time = (long int) SDL_GetTicks();
 
     /* make sure our input state is constantly updated */
     SDL_PollEvent(&game->event);
@@ -553,9 +553,30 @@ replay_update(struct Game *game)
   game->input = game->past_input[game->past_input_frame];
   game->past_input_frame--;
 
-  /* if the input frame has reach 0, loop it backwards */
+  /* if the input frame has reached 0, loop it backwards */
   if (game->past_input_frame < 0) {
     game->past_input_frame = (INPUT_FRAMES - 1);
+  }
+
+  switch (game->input) {
+    case SDL_SCANCODE_W:
+      printf("%d: up\n", game->past_input_frame);
+      break;
+
+    case SDL_SCANCODE_S:
+      printf("%d: down\n", game->past_input_frame);
+      break;
+
+    case SDL_SCANCODE_A:
+      printf("%d: left\n", game->past_input_frame);
+      break;
+
+    case SDL_SCANCODE_D:
+      printf("%d: right\n", game->past_input_frame);
+      break;
+
+    default:
+      printf("%d: null\n", game->past_input_frame);
   }
 
   /* like normal except we're moving backwards */
@@ -589,12 +610,12 @@ replay_restraint(struct Game *game, bool *looping)
   }
 
   /* when all of the past input has been used, discard it and stop */
-  if (counter > INPUT_FRAMES) {
+  if (counter >= INPUT_FRAMES) {
     reset_saved_input(game);
     last_frame = -1;
     
-    /* reset level time so asteroids dont immediately pop up on player */
-    game->level_time = SDL_GetTicks();
+    /* increase the time by 7.5 seconds so we have buffer before asteroids */
+    game->level_time += 7500;
     *looping   = false;
   }
 }
