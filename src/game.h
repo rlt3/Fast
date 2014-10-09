@@ -30,14 +30,23 @@ struct Game {
   struct Graphics graphics;
 
   bool            running;
+
   float           speed;
+  int             level;
   int             fuel;
 
   long int        current_time;
   long int        frame_time;
   long int        speed_time;
   long int        input_time;
+
   long int        level_time;
+  long int        level_duration;
+
+  long int        asteroid_interval;
+  long int        next_asteroid_time;
+  int             num_asteroids;
+  int             current_max_asteroids;
 
   int             input;
 
@@ -58,7 +67,7 @@ void reset_saved_input(struct Game *game);
 
 /* handle the objects of our game */
 void handle_input(struct Game * game);
-void handle_asteroids(struct Polygon *asteroids[], float speed);
+void handle_asteroids(struct Polygon *asteroids[], float speed, int max_asteroids);
 void handle_stars(struct Polygon *stars[], float speed);
 
 void display_player(struct Game *game);
@@ -97,6 +106,9 @@ void main_speed(struct Game *game);
 void main_level(struct Game *game);
 void main_update(struct Game *game);
 void main_restraint(struct Game *game, bool *looping);
+
+void next_level_update(struct Game *game);
+void next_level_restraint(struct Game *game, bool *looping);
 
 void replay_speed(struct Game *game);
 void replay_update(struct Game *game);
