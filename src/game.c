@@ -209,6 +209,8 @@ handle_asteroids(struct Polygon *asteroids[], float speed, int max_asteroids)
         asteroid_count = 1;
 
         for (j = 0; j < MAX_ASTEROIDS; j++) {
+          if (asteroids[j] == NULL) { continue; }
+
           if (polygon_visible(*asteroids[j])) {
             asteroid_count++;
           }
