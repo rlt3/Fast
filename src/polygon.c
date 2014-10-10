@@ -91,7 +91,7 @@ construct_asteroid()
   /* make our asteroids random by generating an angle for each side */
   int i;
   for (i = 0; i < p->sides; i++) {
-    p->angles[i] = (angle_portion * i) + rand() % 91;
+    p->angles[i] = (angle_portion * i) + rand() % 56;
 
     create_vertex(p->vertices[i], p->x, p->y, p->radius, 
         p->angle, p->angles[i]);

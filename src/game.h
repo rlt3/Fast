@@ -58,6 +58,8 @@ struct Game {
 
 int  initialize_game(struct Game *game);
 void set_game(struct Game *game);
+void set_time(struct Game *game);
+void set_level_information(struct Game *game);
 void construct_all_stars(struct Polygon *stars[]);
 
 /* gather input, opposite it for replay and reset when done */
@@ -81,8 +83,9 @@ bool player_collision(struct Polygon *asteroids[],
 /* create and always return the same static screen vertices */
 float** screen_vertices();
 
-/* find first empty spot and create an asteroid */
-void add_asteroid(struct Polygon *asteroid[]);
+/* Find the first empty spot and create an asteroid */
+void make_asteroid(struct Polygon *asteroid[]);
+int  num_visible_asteroids(struct Polygon *asteroids[]);
 
 /* main loop used for animation, replaying, and the main loop */
 void main_loop(struct Game *game, 
@@ -102,7 +105,6 @@ void end_restraint(struct Game *game, bool *loop);
 void animation_update(struct Game *game);
 void animation_restraint(struct Game *game, bool *loop);
 
-void main_speed(struct Game *game);
 void main_level(struct Game *game);
 void main_update(struct Game *game);
 void main_restraint(struct Game *game, bool *looping);
@@ -110,7 +112,6 @@ void main_restraint(struct Game *game, bool *looping);
 void next_level_update(struct Game *game);
 void next_level_restraint(struct Game *game, bool *looping);
 
-void replay_speed(struct Game *game);
 void replay_update(struct Game *game);
 void replay_display(struct Game *game);
 void replay_restraint(struct Game *game, bool *looping);

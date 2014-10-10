@@ -29,33 +29,55 @@ set_game(struct Game *game)
 
   deconstruct_polygon_array(game->asteroids, MAX_ASTEROIDS);
 
-  game->player   = construct_player();
-  game->running  = true;
-  game->speed    = BASE_SPEED;
-  game->fuel     = 3;
-  game->level    = 1;
-  
-  /*
-   * TODO: Make sure time starts when player has full control
-   */
+  game->player  = construct_player();
+  game->running = true;
+  game->speed   = 0.05;
+  game->fuel    = 3;
+  game->level   = 1;
 
-  game->current_time = (long int) SDL_GetTicks();
-  game->frame_time   = game->current_time;
-  game->speed_time   = game->current_time;
-  game->level_time   = game->current_time;
-
-  game->level_duration = 5000;
-
-  game->asteroid_interval     = 0;
-  game->next_asteroid_time    = 0;
-  game->num_asteroids         = 0;
-  game->current_max_asteroids = 0;
+  set_time(game);
 
   /* set input_frames so it rolls over to 0 on the first loop */
   game->past_input_frame  = (INPUT_FRAMES - 1);
 
   /* preset the input to 'nothing' */
   reset_saved_input(game);
+}
+
+void
+set_time(struct Game *game)
+{
+  game->current_time = (long int) SDL_GetTicks();
+  game->frame_time   = game->current_time;
+  game->speed_time   = game->current_time;
+  game->level_time   = game->current_time;
+
+  set_level_information(game);
+}
+
+/* Based on the duration (10 seconds) split the duration in half (5 seconds).
+ * We want to have the maximum number of asteroids out by 5 seconds, but deploy
+ * them in a manageable and realistic way (not all at once). 
+ *
+ * This is so they can be dodged one-by-one and also so that for half the level 
+ * all of the asteroids are there.
+ *
+ * So, we split that half duration (5 seconds) into parts equal to the number
+ * of asteroids. That is the asteroid interval and we deploy a new asteroid
+ * every interval.
+ */
+void
+set_level_information(struct Game *game)
+{
+  //game->current_max_asteroids = (game->level + 1) + game->level;
+  
+  game->level_duration        = 5000;
+  game->level_time            = game->current_time;
+  game->current_max_asteroids = (game->level + 1);
+  game->asteroid_interval     = 
+      (game->level_duration / 2) / game->current_max_asteroids;
+
+  game->next_asteroid_time    = game->level_time + game->asteroid_interval;
 }
 
 void 
@@ -179,8 +201,6 @@ handle_asteroids(struct Polygon *asteroids[], float speed, int max_asteroids)
   /* if speed is less than 0, we're moving backwards */
   int backwards = speed < 0 ? 1 : 0;
 
-  int asteroid_count = 1;
-
   for (i = 0; i < MAX_ASTEROIDS; i++) {
     if (asteroids[i] == NULL) { continue; }
 
@@ -206,22 +226,12 @@ handle_asteroids(struct Polygon *asteroids[], float speed, int max_asteroids)
 
       /* if it's the first time below screen, make a new asteroid */
       if (asteroids[i]->first_below == 0) {
-        asteroid_count = 1;
-
-        for (j = 0; j < MAX_ASTEROIDS; j++) {
-          if (asteroids[j] == NULL) { continue; }
-
-          if (polygon_visible(*asteroids[j])) {
-            asteroid_count++;
-          }
-        }
+        asteroids[i]->first_below = 1;
 
         /* Make a new asteroid if there aren't enough on screen */
-        //if (asteroid_count < max_asteroids) {
-          asteroids[i]->first_below = 1;
-          add_asteroid(asteroids);
-        //}
-
+        if (num_visible_asteroids(asteroids) < max_asteroids) {
+          make_asteroid(asteroids);
+        }
       }
 
       /* once it has been under 5 seconds, remove it leaving open spot */
@@ -345,25 +355,10 @@ main_loop(struct Game *game,
     /* make sure our input state is constantly updated */
     SDL_PollEvent(&game->event);
 
-    /* update the speed of the game every second */
-    //if (game->current_time - game->speed_time > ONE_SECOND) {
-    //  game->speed_time = game->current_time;
-
-    //  if (speed) {
-    //    speed(game);
-    //  }
-    //}
-
-    /* 
-     * add new asteroids every level. 
-     */
-    //if (game->current_time - game->level_time > game->level_duration) {
-    //  game->level_time = game->current_time;
-
-      if (level) {
-        level(game);
-      }
-    //}
+    /* handle level information if needed */
+    if (level) {
+      level(game);
+    }
 
     /* update the the game every 30 frames */
     if (game->current_time - game->frame_time > THIRTY_FPS) {
@@ -422,10 +417,29 @@ screen_vertices()
   return screen_vertices;
 }
 
+/* count how many asteroids are visible */
+int
+num_visible_asteroids(struct Polygon *asteroids[])
+{
+  int i;
+  int asteroid_count = 1;
+
+  for (i = 0; i < MAX_ASTEROIDS; i++) {
+    if (asteroids[i] == NULL) { continue; }
+
+    if (polygon_visible(*asteroids[i])) {
+      asteroid_count++;
+    }
+  }
+
+  return asteroid_count;
+}
+
 /* Find the first empty spot and create an asteroid */
 void
-add_asteroid(struct Polygon *asteroids[])
+make_asteroid(struct Polygon *asteroids[])
 {
+  printf("adding asteroid @ %lu\n", (long int) SDL_GetTicks());
   int i;
   for (i = 0; i < MAX_ASTEROIDS; i++) {
     if (asteroids[i] == NULL) {
@@ -514,8 +528,7 @@ main_level(struct Game *game)
       game->current_time - game->next_asteroid_time > game->asteroid_interval) {
     game->next_asteroid_time += game->asteroid_interval;
 
-    printf("adding astroid | current max: %d\n", game->current_max_asteroids);
-    add_asteroid(game->asteroids);
+    make_asteroid(game->asteroids);
     game->num_asteroids++;
   }
 
@@ -524,32 +537,17 @@ main_level(struct Game *game)
     main_loop(game, NULL, NULL, next_level_update, NULL, next_level_restraint);
 
     game->level++;
-    game->speed = 0.05;
+    game->speed += 0.05;
 
-    game->level_duration += 10000;
+    game->level_duration += 20000;
 
     /* Set the time frames of when our intervals to create asteroids */
-    game->level_time = game->current_time;
-    game->current_max_asteroids = (game->level + 1) + game->level;
-    game->asteroid_interval = (game->level_duration / 2) / game->current_max_asteroids;
-    game->next_asteroid_time = game->level_time + game->asteroid_interval;
+    set_level_information(game);
 
     /* Add an asteroid to get us started with this next level */
-    add_asteroid(game->asteroids);
+    make_asteroid(game->asteroids);
     game->num_asteroids = 0;
-
-    printf("Next level: %d\n", game->level);
   }
-
-  /*
-   * Game should have levels starting at level 1 with 3 asteroids at lasts 15
-   * seconds. Each additional level takes 5 more seconds to complete and adds
-   * two more asteroids as well as additional speed.
-   *
-   * At the end of each level a `main_loop' function call happens where the 
-   * player is animated back towards the starting position and then the 
-   * asteroids start coming.
-   */
 }
 
 void
@@ -569,20 +567,40 @@ main_update(struct Game *game)
 }
 
 void
-main_speed(struct Game *game)
-{
-  game->speed += 0.01f;
-}
-
-void
 main_restraint(struct Game *game, bool *looping)
 {
+  long int start;
+
+  /*
+   * TODO:
+   *  Bug where, when level duration is complete and we are 'in limbo' waiting
+   *  for asteroids to go off screen, if player has collision and starts to 
+   *  replay, that moves asteroids off the screen and then deletes them when
+   *  it gets back to the next_level_restraint.
+   *
+   *  Need to make sure that player is still playing and that at some point
+   *  asteroids just stop coming. Perhaps temporarily setting max_asteroids
+   *  to 0? But, we still need for those asteroids that are going above screen
+   *  to come back down and be below screen.
+   *
+   *  Perhaps just add a check to see if below screen and not if it is visible.
+   */
+
   if (player_collision(game->asteroids, *game->player)) {
     if (game->fuel > 0) {
       /* if there was collision and there's fuel to rewind */
       game->fuel--;
+
+      puts("----------------------------------");
+      printf("Duration before: %lu > %lu\n", 
+          (game->current_time - game->level_time), game->level_duration);
+      start = SDL_GetTicks();
       main_loop(game, replay_speed, NULL, replay_update, replay_display, 
           replay_restraint);
+      printf("Time in replay: %lu\n", SDL_GetTicks() - start);
+      printf("Duration after:  %lu > %lu\n", 
+          (game->current_time - game->level_time), game->level_duration);
+      puts("----------------------------------");
     } else {
       /* else show end screen and give choice to continue */
       main_loop(game, NULL, NULL, NULL, NULL, end_restraint);
@@ -593,6 +611,15 @@ main_restraint(struct Game *game, bool *looping)
 void
 next_level_update(struct Game *game)
 {
+  /* set the of the player */
+  game->input = gather_input();
+
+  handle_input(game);
+
+  /* save the opposite of the player's input so we can 'replay' it */
+  game->past_input_frame = ++game->past_input_frame % INPUT_FRAMES;
+  game->past_input[game->past_input_frame] = opposite_input(game->input);
+
   int i;
   for (i = 0; i < MAX_ASTEROIDS; i++) {
     if (game->asteroids[i] == NULL) { continue; }
@@ -606,6 +633,8 @@ next_level_update(struct Game *game)
       game->asteroids[i] = NULL;
     }
   }
+
+  handle_stars(game->stars, game->speed);
 }
 
 void
@@ -614,6 +643,9 @@ next_level_restraint(struct Game *game, bool *looping)
   static Uint32 time  = 0;
   static bool   start = false;
   int i;
+
+  /* still handle collision while moving towards next level */
+  main_restraint(game, looping);
 
   /* only start count down once all asteroids are gone */
   if (time == 0) {
@@ -639,24 +671,6 @@ next_level_restraint(struct Game *game, bool *looping)
     time  = 0;
     *looping = false;
   }
-}
-
-/* 
- * TODO:
- *    Make speed rewind smoothly and then after replaying, speed up gracefully
- *    back to where it was, giving player time to adapt to rewinding.
- *
- *    Also, speed needs to match the speed of the asteroid as it was when it was
- *    moving downwards normally so the player's input in replay matches up to 
- *    the asteroid. 
- *
- *    Since we increment by 0.01, we need to decrement by 0.01 in reverse so
- *    that everything is in lockstep.
- */
-void
-replay_speed(struct Game *game)
-{
-  game->speed -= 0.01f;
 }
 
 void
@@ -707,7 +721,7 @@ replay_restraint(struct Game *game, bool *looping)
     last_frame = -1;
     
     /* increase the time by the time we took here */
-    game->level_time += 3000;
+    game->level_duration += 3000;
 
     game->next_asteroid_time = game->level_time + game->asteroid_interval;
     *looping   = false;
