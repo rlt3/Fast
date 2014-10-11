@@ -65,7 +65,7 @@ int
 load_textures(struct Graphics *graphics)
 {
 
-  graphics->asteroid_texture = SOIL_load_OGL_texture("asteroid.png",
+  graphics->asteroid_texture = SOIL_load_OGL_texture("textures/asteroid.png",
       SOIL_LOAD_AUTO,
       SOIL_CREATE_NEW_ID,
       SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | 
@@ -77,7 +77,7 @@ load_textures(struct Graphics *graphics)
     return 1;
   }
 
-  graphics->ship_texture = SOIL_load_OGL_texture("ship.png",
+  graphics->ship_texture = SOIL_load_OGL_texture("textures/ship.png",
       SOIL_LOAD_AUTO,
       SOIL_CREATE_NEW_ID,
       SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | 
@@ -89,7 +89,7 @@ load_textures(struct Graphics *graphics)
     return 1;
   }
 
-  graphics->main_screen_texture = SOIL_load_OGL_texture("fast.png",
+  graphics->main_screen_texture = SOIL_load_OGL_texture("textures/fast.png",
       SOIL_LOAD_AUTO,
       SOIL_CREATE_NEW_ID,
       SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | 
@@ -101,7 +101,7 @@ load_textures(struct Graphics *graphics)
     return 1;
   }
 
-  graphics->collision_texture = SOIL_load_OGL_texture("collision.png",
+  graphics->collision_texture = SOIL_load_OGL_texture("textures/collision.png",
       SOIL_LOAD_AUTO,
       SOIL_CREATE_NEW_ID,
       SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | 

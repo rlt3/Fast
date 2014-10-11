@@ -89,7 +89,6 @@ int  num_visible_asteroids(struct Polygon *asteroids[]);
 
 /* main loop used for animation, replaying, and the main loop */
 void main_loop(struct Game *game, 
-        void (*speed)(struct Game *), 
         void (*level)(struct Game *), 
         void (*update)(struct Game *), 
         void (*display)(struct Game *), 

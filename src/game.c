@@ -341,7 +341,6 @@ player_collision(struct Polygon *asteroids[], struct Polygon  player)
  */
 void
 main_loop(struct Game *game, 
-    void (*speed)(struct Game *), 
     void (*level)(struct Game *), 
     void (*update)(struct Game *), 
     void (*display)(struct Game *), 
@@ -459,8 +458,7 @@ end_restraint(struct Game *game, bool *loop)
         set_game(game);
 
         /* animate player to the starting position */
-        main_loop(game, NULL, NULL, animation_update, NULL, 
-            animation_restraint);
+        main_loop(game, NULL, animation_update, NULL, animation_restraint);
 
         *loop = false;
     }
@@ -534,7 +532,7 @@ main_level(struct Game *game)
 
   /* if this level's duration is up */
   if (game->current_time - game->level_time > game->level_duration) {
-    main_loop(game, NULL, NULL, next_level_update, NULL, next_level_restraint);
+    main_loop(game, NULL, next_level_update, NULL, next_level_restraint);
 
     game->level++;
     game->speed += 0.05;
@@ -595,15 +593,14 @@ main_restraint(struct Game *game, bool *looping)
       printf("Duration before: %lu > %lu\n", 
           (game->current_time - game->level_time), game->level_duration);
       start = SDL_GetTicks();
-      main_loop(game, replay_speed, NULL, replay_update, replay_display, 
-          replay_restraint);
+      main_loop(game, NULL, replay_update, replay_display, replay_restraint);
       printf("Time in replay: %lu\n", SDL_GetTicks() - start);
       printf("Duration after:  %lu > %lu\n", 
           (game->current_time - game->level_time), game->level_duration);
       puts("----------------------------------");
     } else {
       /* else show end screen and give choice to continue */
-      main_loop(game, NULL, NULL, NULL, NULL, end_restraint);
+      main_loop(game, NULL, NULL, NULL, end_restraint);
     }
   } 
 }
