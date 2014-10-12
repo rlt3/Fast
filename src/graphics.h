@@ -26,6 +26,7 @@ struct Graphics {
   GLuint            collision_texture;
   GLuint            ship_texture;
   GLuint            asteroid_texture;
+  GLuint            level_texture;
 };
 
 void Display_InitGL();

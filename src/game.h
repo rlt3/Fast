@@ -108,7 +108,7 @@ void main_level(struct Game *game);
 void main_update(struct Game *game);
 void main_restraint(struct Game *game, bool *looping);
 
-void next_level_update(struct Game *game);
+void next_level_display(struct Game *game);
 void next_level_restraint(struct Game *game, bool *looping);
 
 void replay_update(struct Game *game);

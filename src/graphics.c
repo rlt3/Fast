@@ -61,57 +61,34 @@ Display_SetViewport(int width, int height)
  *    reuse.
  */
 
+
+GLuint
+load_texture(const char *texture)
+{
+  GLuint tex_num = SOIL_load_OGL_texture(texture,
+      SOIL_LOAD_AUTO,
+      SOIL_CREATE_NEW_ID,
+      SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | 
+      SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT);
+
+  /* check for an error during the load process */
+  if( 0 == tex_num ) {
+    printf( "SOIL loading error: '%s'\n", SOIL_last_result() );
+    return -1;
+  }
+
+  return tex_num;
+}
+
 int
 load_textures(struct Graphics *graphics)
 {
 
-  graphics->asteroid_texture = SOIL_load_OGL_texture("textures/asteroid.png",
-      SOIL_LOAD_AUTO,
-      SOIL_CREATE_NEW_ID,
-      SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | 
-      SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT);
-  
-  /* check for an error during the load process */
-  if( 0 == graphics->asteroid_texture ) {
-    printf( "SOIL loading error: '%s'\n", SOIL_last_result() );
-    return 1;
-  }
-
-  graphics->ship_texture = SOIL_load_OGL_texture("textures/ship.png",
-      SOIL_LOAD_AUTO,
-      SOIL_CREATE_NEW_ID,
-      SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | 
-      SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT);
-
-  /* check for an error during the load process */
-  if( 0 == graphics->ship_texture ) {
-    printf( "SOIL loading error: '%s'\n", SOIL_last_result() );
-    return 1;
-  }
-
-  graphics->main_screen_texture = SOIL_load_OGL_texture("textures/fast.png",
-      SOIL_LOAD_AUTO,
-      SOIL_CREATE_NEW_ID,
-      SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | 
-      SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT);
-
-  /* check for an error during the load process */
-  if( 0 == graphics->main_screen_texture ) {
-    printf( "SOIL loading error: '%s'\n", SOIL_last_result() );
-    return 1;
-  }
-
-  graphics->collision_texture = SOIL_load_OGL_texture("textures/collision.png",
-      SOIL_LOAD_AUTO,
-      SOIL_CREATE_NEW_ID,
-      SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | 
-      SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT);
-
-  /* check for an error during the load process */
-  if( 0 == graphics->collision_texture ) {
-    printf( "SOIL loading error: '%s'\n", SOIL_last_result() );
-    return 1;
-  }
+  graphics->asteroid_texture    = load_texture("textures/asteroid.png");
+  graphics->ship_texture        = load_texture("textures/ship.png");
+  graphics->main_screen_texture = load_texture("textures/fast.png");
+  graphics->collision_texture   = load_texture("textures/collision.png");
+  graphics->level_texture       = load_texture("textures/level.png");
 
   return 0;
 }
