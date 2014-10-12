@@ -69,8 +69,6 @@ set_time(struct Game *game)
 void
 set_level_information(struct Game *game)
 {
-  //game->current_max_asteroids = (game->level + 1) + game->level;
-  
   game->level_duration        = 10000;
   game->level_time            = game->current_time;
   game->current_max_asteroids = (game->level + 1);
@@ -386,6 +384,31 @@ main_loop(struct Game *game,
   }
 }
 
+void
+display_number(struct Game *game, int number)
+{
+  char string[8];
+
+  sprintf(string, "%d", number);
+
+  int i;
+  int digit;
+  int offset;
+  float kerning;
+
+  int length = strlen(string);
+
+  for (i = 0; i < length; i++) {
+    digit   = (int) string[i] - 48;
+    kerning = 1.5 + (float) i;
+
+    glPushMatrix();
+    glTranslatef(kerning, 0.6f, 0.0f);
+    display_quad(game->graphics.number_textures[digit], 0, 0, number_vertices());
+    glPopMatrix();
+  }
+}
+
 /* 
  * return the vertices for a rectangle the size of the screen. this is for
  * displaying overlays like the main menu screen/pause screen/interface for
@@ -416,6 +439,31 @@ screen_vertices()
   return screen_vertices;
 }
 
+float**
+number_vertices()
+{
+  static bool created = false;
+  static float **number_vertices;
+
+  /* return the same logo vertices every time */
+  if (!created) {
+    number_vertices = make_vertices_array(4);
+
+    number_vertices[0][X] =  0.65;
+    number_vertices[0][Y] =  0.65;
+    number_vertices[1][X] = -0.65;
+    number_vertices[1][Y] =  0.65;
+    number_vertices[2][X] = -0.65;
+    number_vertices[2][Y] = -0.65;
+    number_vertices[3][X] =  0.65;
+    number_vertices[3][Y] = -0.65;
+
+    created = true;
+  }
+  
+  return number_vertices;
+}
+
 /* count how many asteroids are visible */
 int
 num_visible_asteroids(struct Polygon *asteroids[])
@@ -438,7 +486,6 @@ num_visible_asteroids(struct Polygon *asteroids[])
 void
 make_asteroid(struct Polygon *asteroids[])
 {
-  printf("adding asteroid @ %lu\n", (long int) SDL_GetTicks());
   int i;
   for (i = 0; i < MAX_ASTEROIDS; i++) {
     if (asteroids[i] == NULL) {
@@ -521,8 +568,6 @@ animation_restraint(struct Game *game, bool *loop)
 void
 main_level(struct Game *game)
 {
-  static int new_level = 1;
-
   int i;
   int asteroid_count = 0;
 
@@ -537,11 +582,8 @@ main_level(struct Game *game)
 
   /* if this level's duration is up */
   if (game->current_time - game->level_time > game->level_duration) {
-    if (new_level) {
-      printf("duration up\n");
-      new_level = 0;
-    }
 
+    /* no more new asteroids now that the level is up */
     game->current_max_asteroids = 0;
 
     for (i = 0; i < MAX_ASTEROIDS; i++) {
@@ -552,10 +594,8 @@ main_level(struct Game *game)
       }
     }
 
-    //if (num_visible_asteroids(game->asteroids) == 0) {
+    /* once all asteroids have gone below screen from previous level */
     if (asteroid_count == 0) {
-      printf("making next level");
-      new_level = 1;
       main_loop(game, NULL, main_update, next_level_display, 
           next_level_restraint);
 
@@ -599,7 +639,7 @@ main_restraint(struct Game *game, bool *looping)
   if (player_collision(game->asteroids, *game->player)) {
     if (game->fuel > 0) {
       /* if there was collision and there's fuel to rewind */
-      //game->fuel--;
+      game->fuel--;
       main_loop(game, NULL, replay_update, replay_display, replay_restraint);
     } else {
       /* else show end screen and give choice to continue */
@@ -612,6 +652,7 @@ void
 next_level_display(struct Game *game)
 {
   display_quad(game->graphics.level_texture, 0, 0, screen_vertices());
+  display_number(game, game->level);
 }
 
 /* count for 5 seconds and then return to main loop */
@@ -693,6 +734,7 @@ cleanup_game(struct Game *game)
 {
   SDL_Quit();
   destroy_vertices_array(screen_vertices(), 4);
+  destroy_vertices_array(number_vertices(), 4);
   deconstruct_polygon(game->player);
   deconstruct_polygon_array(game->asteroids, MAX_ASTEROIDS);
   deconstruct_polygon_array(game->stars,     MAX_STARS);

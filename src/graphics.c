@@ -90,6 +90,15 @@ load_textures(struct Graphics *graphics)
   graphics->collision_texture   = load_texture("textures/collision.png");
   graphics->level_texture       = load_texture("textures/level.png");
 
+  char number_path[15];
+
+  int i;
+  for (i = 0; i < 10; i++) {
+    sprintf(number_path, "textures/%d.png", i);
+    printf("%s\n", number_path);
+    graphics->number_textures[i] = load_texture(number_path);
+  }
+
   return 0;
 }
 
@@ -152,21 +161,6 @@ display_triangle(GLuint texture, float  x, float  y, float **vertices)
 
   glEnable (GL_BLEND);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
-
-  //glBegin(GL_QUADS);
-  //    glTexCoord2f(1.0f, 1.0f);
-  //    glVertex2f(x + 0.75f, y + 0.75f);
-
-  //    glTexCoord2f(0.0f, 1.0f);
-  //    glVertex2f(x - 0.75f, y + 0.75f);
-
-  //    glTexCoord2f(0.0f, 0.0f);
-  //    glVertex2f(x - 0.75f, y - 0.75f);
-
-  //    glTexCoord2f(1.0f, 0.0f);
-  //    glVertex2f(x + 0.75f, y - 0.75f);
-  //glEnd();
-  //glDisable(GL_TEXTURE_2D);
   
   glBegin(GL_TRIANGLES);
     int i;

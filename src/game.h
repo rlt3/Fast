@@ -82,6 +82,9 @@ bool player_collision(struct Polygon *asteroids[],
 
 /* create and always return the same static screen vertices */
 float** screen_vertices();
+float** number_vertices();
+
+void display_number(struct Game *game, int number);
 
 /* Find the first empty spot and create an asteroid */
 void make_asteroid(struct Polygon *asteroid[]);
