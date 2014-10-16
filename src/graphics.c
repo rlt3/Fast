@@ -55,13 +55,6 @@ Display_SetViewport(int width, int height)
   return 1;
 }
 
-/*
- * TODO:
- *    Refactor the SOIL function into a singular function we can
- *    reuse.
- */
-
-
 GLuint
 load_texture(const char *texture)
 {
@@ -89,13 +82,14 @@ load_textures(struct Graphics *graphics)
   graphics->main_screen_texture = load_texture("textures/fast.png");
   graphics->collision_texture   = load_texture("textures/collision.png");
   graphics->level_texture       = load_texture("textures/level.png");
+  graphics->score_texture       = load_texture("textures/end.png");
 
   char number_path[15];
 
+  /* load all number textures 0-9 */
   int i;
   for (i = 0; i < 10; i++) {
     sprintf(number_path, "textures/%d.png", i);
-    printf("%s\n", number_path);
     graphics->number_textures[i] = load_texture(number_path);
   }
 

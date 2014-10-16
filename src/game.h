@@ -59,7 +59,7 @@ struct Game {
 int  initialize_game(struct Game *game);
 void set_game(struct Game *game);
 void set_time(struct Game *game);
-void set_level_information(struct Game *game);
+void set_level(struct Game *game);
 void construct_all_stars(struct Polygon *stars[]);
 
 /* gather input, opposite it for replay and reset when done */
@@ -102,6 +102,7 @@ void start_update(struct Game *game);
 void start_display(struct Game *game);
 void start_restraint(struct Game *game, bool *loop);
 
+void end_display(struct Game *game);
 void end_restraint(struct Game *game, bool *loop);
 
 void animation_update(struct Game *game);
@@ -112,10 +113,10 @@ void main_update(struct Game *game);
 void main_restraint(struct Game *game, bool *looping);
 
 void next_level_display(struct Game *game);
-void next_level_restraint(struct Game *game, bool *looping);
+void three_second_restraint(struct Game *game, bool *looping);
 
 void replay_update(struct Game *game);
-void replay_display(struct Game *game);
+void collision_display(struct Game *game);
 void replay_restraint(struct Game *game, bool *looping);
 
 void cleanup_game(struct Game *game);
