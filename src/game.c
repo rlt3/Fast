@@ -113,10 +113,6 @@ gather_input()
     return SDL_SCANCODE_D;
   }
 
-  if (keystate[SDL_SCANCODE_ESCAPE]) {
-    return SDL_SCANCODE_ESCAPE;
-  }
-
   return NO_INPUT;
 }
 
@@ -160,27 +156,33 @@ handle_input(struct Game *game)
 {
   game->player->angle = 90;
 
+  /* Move player and make sure they can't go too far off screen */
+
   switch(game->input) {
     case SDL_SCANCODE_W:
-      game->player->y += 0.1f;
+      if (game->player->y + 0.1f < Y_LENGTH) {
+        game->player->y += 0.1f;
+      }
       break;
 
     case SDL_SCANCODE_S:
-      game->player->y -= 0.1f;
+      if (game->player->y - 0.1f > -Y_LENGTH) {
+        game->player->y -= 0.1f;
+      }
       break;
 
     case SDL_SCANCODE_A:
+      if (game->player->x - (game->speed + 0.25f) > -(X_LENGTH - 1.5f)) {
+        game->player->x -= game->speed + 0.25;
+      }
       game->player->angle = 110;
-      game->player->x -= game->speed + 0.25;
       break;
 
     case SDL_SCANCODE_D:
+      if (game->player->x + (game->speed + 0.25f) < (X_LENGTH - 1.5f)) {
+        game->player->x += game->speed + 0.25;
+      }
       game->player->angle = 70;
-      game->player->x += game->speed + 0.25;
-      break;
-
-    case SDL_SCANCODE_ESCAPE:
-      game->running = false;
       break;
   }
 
@@ -353,8 +355,16 @@ main_loop(struct Game *game,
   while (game->running && looping) {
     game->current_time = (long int) SDL_GetTicks();
 
-    /* make sure our input state is constantly updated */
-    SDL_PollEvent(&game->event);
+    /* make sure our input state is constantly updated & able to quit anytime */
+    while (SDL_PollEvent(&game->event)){
+      switch (game->event.type) {
+        case SDL_KEYDOWN:
+          switch(game->event.key.keysym.sym) {
+            case SDLK_ESCAPE: case SDL_QUIT:  
+              game->running = false;
+          }
+      }
+    }
 
     /* handle level information if needed */
     if (level) {
